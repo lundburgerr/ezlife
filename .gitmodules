@@ -1,0 +1,6 @@
+[submodule "trunk/python/pyscreenshot"]
+	path = trunk/python/pyscreenshot
+	url = https://github.com/ponty/pyscreenshot.git
+[submodule "trunk/opencv"]
+	path = trunk/opencv
+	url = https://github.com/Itseez/opencv.git
