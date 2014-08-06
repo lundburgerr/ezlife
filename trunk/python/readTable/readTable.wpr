@@ -1,8 +1,0 @@
-#!wing
-#!version=5.0
-##################################################################
-# Wing IDE project file                                          #
-##################################################################
-[project attributes]
-proj.file-list = [loc('readTable.py')]
-proj.file-type = 'shared'
