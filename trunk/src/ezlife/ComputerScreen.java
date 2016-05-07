@@ -2,18 +2,29 @@ package ezlife;
 import java.awt.*;
 import java.awt.image.*;
 import java.text.AttributedCharacterIterator;
+import java.util.ArrayList;
 
 import javax.swing.JComponent;
 
 public class ComputerScreen {
 	
 	private int id; //Uniquely defines the poker window
-	private Robot robot; //Used to capture the screen
-	private Window screen;
+	int x;
+	int y;
+	int width;
+	int height;
 	
-	public ComputerScreen(int id) throws AWTException{
+	private Robot robot; //Used to capture the screen
+	private ScreenField screen;
+	
+	public ComputerScreen(int id, int x, int y, int width, int height) throws AWTException{
 		this.id = id;
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
 		this.robot = new Robot();
+		screen = new ScreenField(x, y, width, height);
 	}
 	
 	/**
@@ -22,39 +33,42 @@ public class ComputerScreen {
 	 * @return screenshot of window
 	 */
 	public BufferedImage captureWindow(){
-		Toolkit t = Toolkit.getDefaultToolkit();
-		Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+		//Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+		Rectangle screenRect = new Rectangle(x, y, width, height);
 		BufferedImage screenShot = robot.createScreenCapture(screenRect);
 		
 		return screenShot;
 	}
 	
-	public void drawScreenRectangle(int x, int y, int width, int height){
-		screen = new Window(null)
-		{
-			private static final long serialVersionUID = -2576011115125513080L;
-			
-			@Override
-			public void paint(Graphics g)
-			{
-				g.drawRect(x, y, width, height);
-				g.setColor(new Color(0x111111)); //representing R G B with R as the first 2 hex
-			}
-			@Override
-			public void update(Graphics g)
-			{
-				paint(g);
-			}
-		};			
-		
-		screen.setAlwaysOnTop(true);
-		screen.setBounds(screen.getGraphicsConfiguration().getBounds());
-		screen.setBackground(new Color(0, true));
-		screen.setVisible(true);
-	}
 	
-	public void resetScreen(){
-		screen.repaint();
+	private class ScreenField {
+
+		private Window field;
+		
+		public ScreenField(int x, int y, int width, int height){
+			field = new Window(null)
+			{
+				private static final long serialVersionUID = -2576011115125513080L;
+				
+				@Override
+				public void paint(Graphics g)
+				{
+					g.drawRect(x, y, width, height);
+					g.setColor(new Color(0x101010)); //representing R G B with R as the first 2 hex
+				}
+				@Override
+				public void update(Graphics g)
+				{
+					paint(g);
+				}
+			};			
+			
+			field.setAlwaysOnTop(true);
+			field.setBounds(field.getGraphicsConfiguration().getBounds());
+			field.setBackground(new Color(0, true));
+			field.setVisible(true);
+		}
+
 	}
 	
 }

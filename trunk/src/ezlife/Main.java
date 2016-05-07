@@ -14,7 +14,9 @@ import javax.swing.JPanel;
 public class Main {
 
 	public static void main(String[] args) {
-		ComputerScreen window = null;
+		PokerTable table;
+		
+		
 		Image image;
 		ImageIcon imageicon;
 		JFrame frame = new JFrame("FrameDemo");
@@ -23,13 +25,15 @@ public class Main {
 		
 		
 		try {
-			window = new ComputerScreen(1);
+			table = new PokerTable();
 		} catch (AWTException e) {
 			e.printStackTrace();
+			return;
 		}
 		
 		// Show screenshot
-		bimage = window.captureWindow();
+		table.updateStatus();
+		bimage = table.getTableImage();
 		imageicon = new ImageIcon(bimage);
 		
         JLabel label = new JLabel("", imageicon, JLabel.CENTER);
@@ -40,18 +44,12 @@ public class Main {
         frame.add(panel);
         frame.setVisible(true);
         
-        // Show rectangle
-        window.drawScreenRectangle(0, 0, 600, 600);
-        
         // Sleep for a few seconds
 //        try {
 //            Thread.sleep(3000);                 //1000 milliseconds is one second.
 //        } catch(InterruptedException ex) {
 //            Thread.currentThread().interrupt();
 //        }
-		
-        // Reset screen
-        window.resetScreen(); //TODO: Not really resetting the screen...
 		
         System.out.println("hej");
 
