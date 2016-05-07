@@ -1,9 +1,7 @@
 package ezlife;
 
-import java.awt.AWTException;
-import java.awt.BorderLayout;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
+import java.awt.*;
+import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -21,20 +19,16 @@ public class Main {
 		ImageIcon imageicon;
 		JFrame frame = new JFrame("FrameDemo");
 		BufferedImage bimage;
+		Point p = new Point(1,1);
+		
+		
 		try {
 			window = new ComputerScreen(1);
 		} catch (AWTException e) {
 			e.printStackTrace();
 		}
 		
-		File imagefile = new File("C:\\Users\\Robin Lundberg\\ezlife\\img\\table2.png");
-//        try {
-//			image = ImageIO.read(imagefile);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		imageicon = new ImageIcon("C:\\Users\\Robin Lundberg\\ezlife\\img\\table2.png");
-		
+		// Show screenshot
 		bimage = window.captureWindow();
 		imageicon = new ImageIcon(bimage);
 		
@@ -46,8 +40,20 @@ public class Main {
         frame.add(panel);
         frame.setVisible(true);
         
+        // Show rectangle
+        window.drawScreenRectangle(0, 0, 600, 600);
+        
+        // Sleep for a few seconds
+//        try {
+//            Thread.sleep(3000);                 //1000 milliseconds is one second.
+//        } catch(InterruptedException ex) {
+//            Thread.currentThread().interrupt();
+//        }
 		
+        // Reset screen
+        window.resetScreen(); //TODO: Not really resetting the screen...
 		
+        System.out.println("hej");
 
 	}
 
