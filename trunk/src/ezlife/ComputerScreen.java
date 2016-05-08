@@ -7,18 +7,15 @@ import java.util.ArrayList;
 import javax.swing.JComponent;
 
 public class ComputerScreen {
-	
-	private int id; //Uniquely defines the poker window
-	int x;
-	int y;
-	int width;
-	int height;
+	private int x;
+	private int y;
+	private int width;
+	private int height;
 	
 	private Robot robot; //Used to capture the screen
 	private ScreenField screen;
 	
-	public ComputerScreen(int id, int x, int y, int width, int height) throws AWTException{
-		this.id = id;
+	public ComputerScreen(int x, int y, int width, int height) throws AWTException{
 		this.x = x;
 		this.y = y;
 		this.width = width;

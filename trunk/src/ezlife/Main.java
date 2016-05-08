@@ -16,16 +16,13 @@ public class Main {
 	public static void main(String[] args) {
 		PokerTable table;
 		
-		
-		Image image;
 		ImageIcon imageicon;
 		JFrame frame = new JFrame("FrameDemo");
 		BufferedImage bimage;
-		Point p = new Point(1,1);
 		
 		
 		try {
-			table = new PokerTable();
+			table = new PokerTable(0,0,800,600);
 		} catch (AWTException e) {
 			e.printStackTrace();
 			return;
