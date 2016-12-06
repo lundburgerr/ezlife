@@ -1,4 +1,4 @@
-function [result, Hands] = BestHand(cards)
+function [handRanking, bestCards] = BestHand(cards)
 % Figure out the best hand given hole cards + FlopTurnRiver
 % cards should be an array of 5 to 7 cards
 % Each card are mapped beginning with spades, diamonds, hearts and clubs
@@ -42,13 +42,13 @@ DeckSize = NumCards * NumSuits;
 
 cards = sort(cards);
 
-% Create hand matrix
+%% Create hand matrix
 handMatrix = zeros(NumSuits,NumCards);
 for idx = 1:length(cards)
     handMatrix(cards(idx)) = 1;
 end
 
-% Get some info for the rest of the checks
+%% Get some info for the rest of the checks
 NumCardsPerSuit = sum(handMatrix,2);
 NumEachCard = sum(handMatrix,1);
 ind4 = find(NumEachCard >= 4,1,'first');
@@ -56,8 +56,8 @@ ind3 = find(NumEachCard >= 3,2,'first');
 ind2 = find(NumEachCard >= 2,2,'first');
 indFl = find(NumCardsPerSuit >= 5,1,'first');
 
-% Determine best hand from given cards 
-result = zeros(1,6);
+%% Determine best hand from given cards 
+result = zeros(1,1+1+1+5);
 for jjdx = 1:size(Hands,1)
     switch Hands{jjdx,3}
         case 'RF'
@@ -67,8 +67,9 @@ for jjdx = 1:size(Hands,1)
             if ~isempty(suitRF)
                 % Found Royal Flush
                 result(1) = jjdx;
-                result(2:6) = suitRF + NumSuits * (0:4);
-                return;
+                result(2:3) = 1; %No valid hand or kicker value
+                result(4:8) = suitRF + NumSuits * (0:4);
+                break;
             end
         case 'SF'
             % Check for Straight Flush
@@ -78,11 +79,13 @@ for jjdx = 1:size(Hands,1)
                 if ~isempty(startInd)
                     % Found Straight Flush
                     result(1) = jjdx;
-                    result(2:6) = suitStFl + NumSuits * (startInd(1) + (-1:3));
+                    result(2) = startInd(1)-1;
+                    result(3) = 1; %No valid kicker value
+                    result(4:8) = suitStFl + NumSuits * (startInd(1) + (-1:3));
                     if (startInd(1) == (NumCards - 3))
                         result(6) = result(6) - DeckSize;
                     end
-                    return;
+                    break;
                 end
             end
         case '4K'
@@ -90,11 +93,13 @@ for jjdx = 1:size(Hands,1)
             if ~isempty(ind4)
                 % Found Four of a Kind
                 result(1) = jjdx;
+                result(2) = ind4(1);%hand value
                 suits4 = find(handMatrix(:,ind4(1)),4,'first'); %??
-                result(2:5) = (NumSuits * (ind4(1) - 1) + suits4);
-                hand = setdiff(cards,result(2:5));
-                result(6) = hand(1);
-                return;
+                result(4:7) = (NumSuits * (ind4(1) - 1) + suits4);
+                hand = setdiff(cards,result(4:7));
+                result(8) = hand(1);
+                result(3) = ceil(hand(1)/NumSuits); %kicker value
+                break;
             end
         case 'FH'
             % Check for Full House
@@ -103,21 +108,25 @@ for jjdx = 1:size(Hands,1)
                 if ~isempty(ind23)
                     % Found Full House
                     result(1) = jjdx;
+                    result(2) = NumCards*(ind3(1)-1) + ind23(1)-1; %TODO: Check if this is right?
+                    result(3) = 1; %No valid kicker value
                     suits3 = find(handMatrix(:,ind3(1)),3,'first');
                     suits2 = find(handMatrix(:,ind23(1)),2,'first');
-                    result(2:4) = (NumSuits * (ind3(1) - 1) + suits3);
-                    result(5:6) = (NumSuits * (ind23(1) - 1) + suits2);
-                    return;
+                    result(4:6) = (NumSuits * (ind3(1) - 1) + suits3);
+                    result(7:8) = (NumSuits * (ind23(1) - 1) + suits2);
+                    break;
                 end
             end
         case 'F'
             % Check for Flush
             if ~isempty(indFl)
-                % Found Flush
+                % Found FlushcardNumFl
                 result(1) = jjdx;
                 cardNumFl = find(handMatrix(indFl(1),:),5,'first');
-                result(2:6) = (NumSuits * (cardNumFl - 1) + indFl(1));
-                return;
+                result(2) = cardNumFl(1);
+                result(3) = 1;
+                result(4:8) = (NumSuits * (cardNumFl - 1) + indFl(1));
+                break;
             end
         case 'S'
             % Check for Straight
@@ -125,60 +134,77 @@ for jjdx = 1:size(Hands,1)
             if ~isempty(startInd)
                 % Found Straight
                 result(1) = jjdx;
+                result(2) = startInd(1);
+                result(3) = 1; %No valid kicker for a straight
                 if (startInd(1) == (NumCards - 3))
                     for idx = 1:4
-                        result(idx + 1) = NumSuits * (startInd(1) + idx - 2) + find(handMatrix(:,startInd(1) + idx - 1),1,'first');
+                        result(idx + 3) = NumSuits * (startInd(1) + idx - 2) + find(handMatrix(:,startInd(1) + idx - 1),1,'first');
                     end
                     result(6) = find(handMatrix(:,1),1,'first');
                 else
                     for idx = 1:5
-                        result(idx + 1) = NumSuits * (startInd(1) + idx - 2) + find(handMatrix(:,startInd(1) + idx - 1),1,'first');
+                        result(idx + 3) = NumSuits * (startInd(1) + idx - 2) + find(handMatrix(:,startInd(1) + idx - 1),1,'first');
                     end
                 end
-                return;
+                break;
             end
         case '3K'
             % Check for Three of a Kind
             if ~isempty(ind3)
                 % Found Three of a Kind
                 result(1) = jjdx;
+                result(2) = ind3(1);
                 suits3 = find(handMatrix(:,ind3(1)),3,'first');
-                result(2:4) = (NumSuits * (ind3(1) - 1) + suits3);
-                hand = setdiff(cards,result(2:4));
-                result(5:6) = hand(1:2);
-                return;
+                result(4:6) = (NumSuits * (ind3(1) - 1) + suits3);
+                hand = setdiff(cards,result(4:6));
+                result(7:8) = hand(1:2);
+                result(3) = NumCards*floor((hand(1)-1)/4) + floor((hand(2)-1)/4) + 1; %kicker value
+                break;
             end
         case '2P'
             % Check for Two Pair
             if (length(ind2) >= 2)
                 % Found Two Pair
                 result(1) = jjdx;
+                result(2) = NumCards*floor((ind2(1)-1)/4) + floor((ind2(2)-1)/4) + 1;
                 suits2a = find(handMatrix(:,ind2(1)),2,'first');
                 suits2b = find(handMatrix(:,ind2(2)),2,'first');
-                result(2:3) = (NumSuits * (ind2(1) - 1) + suits2a);
-                result(4:5) = (NumSuits * (ind2(2) - 1) + suits2b);
+                result(4:5) = (NumSuits * (ind2(1) - 1) + suits2a);
+                result(6:7) = (NumSuits * (ind2(2) - 1) + suits2b);
                 hand = setdiff(cards,result(2:5));
-                result(6) = hand(1);
-                return;
+                result(8) = hand(1);
+                result(3) = floor((hand(1)-1)/4) + 1;
+                break;
             end
         case '1P'
             % Check for One Pair
             if ~isempty(ind2)
                 % Found One Pair
                 result(1) = jjdx;
+                result(2) = ind2(1);
                 suits2 = find(handMatrix(:,ind2(1)),2,'first');
-                result(2:3) = (NumSuits * (ind2(1) - 1) + suits2);
-                hand = setdiff(cards,result(2:3));
-                result(4:6) = hand(1:3);
-                return;
+                result(4:5) = (NumSuits * (ind2(1) - 1) + suits2);
+                hand = setdiff(cards,result(4:5));
+                result(6:8) = hand(1:3);
+                result(3) = NumCards^2*floor((hand(1)-1)/4) + NumCards*floor((hand(2)-1)/4) + NumCards*floor((hand(3)-1)/4) + 1; %kicker value
+                break;
             end
         case 'H'
             % High Card
             result(1) = jjdx;
-            result(2:6) = cards(1:5);
-            return;
+            result(2) = floor((cards(1)-1)/4) + 1;
+            result(3) = NumCards^3*floor((cards(2)-1)/4) + NumCards^2*floor((cards(3)-1)/4) + NumCards*floor((cards(4)-1)/4) + floor((cards(5)-1)/4) + 1; %kicker value
+            result(4:8) = cards(1:5);
+            break;
         otherwise
           error('Hand type not supported');
     end
 end
+
+maxHandValue = NumCards^2; %is atleast an upper limit
+maxKickerValue = NumCards^5; %is atleast an upper limit
+handRanking = result(1)*maxHandValue*maxKickerValue + result(2)*maxKickerValue + result(3);
+bestCards = result(4:8);
+
+
 
