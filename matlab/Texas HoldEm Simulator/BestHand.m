@@ -113,7 +113,7 @@ for jjdx = 1:size(Hands,1)
                 if ~isempty(ind23)
                     % Found Full House
                     result(1) = jjdx;
-                    result(2) = NumCards*(ind3(1)-1) + ind23(1)-1; %TODO: Check if this is right?
+                    result(2) = factorialBase2Dec([ind3, ind23], NumCards, 2); %TODO: Check if this is right?
                     result(3) = 1; %No valid kicker value
                     suits3 = find(handMatrix(:,ind3(1)),3,'first');
                     suits2 = find(handMatrix(:,ind23(1)),2,'first');
