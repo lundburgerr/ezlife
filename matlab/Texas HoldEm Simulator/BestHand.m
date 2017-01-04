@@ -1,4 +1,4 @@
-function [handRanking, bestCards] = BestHand(cards)
+function [handRanking, handResult, bestCards] = BestHand(cards)
 % Figure out the best hand given hole cards + FlopTurnRiver
 % cards should be an array of 5 to 7 cards
 % Each card are mapped beginning with spades, diamonds, hearts and clubs
@@ -20,6 +20,11 @@ function [handRanking, bestCards] = BestHand(cards)
 % result, Hands{result(1), 1}, gives the result of the hand and the
 % result(2:6) with which cards we got that with the mapping above
 % A zero represent the null card
+%
+% TODO: Kicker and hand values should be as small as possible and there
+% should also not be any skips between values for handRanking for adjacent
+% handvalues. SO basically edit result(2) and result(3) everywhere and also
+% the calculation for  handRanking
 
 
 Cards = {'A','K','Q','J','10','9','8','7','6','5','4','3','2'};
@@ -123,8 +128,9 @@ for jjdx = 1:size(Hands,1)
                 % Found FlushcardNumFl
                 result(1) = jjdx;
                 cardNumFl = find(handMatrix(indFl(1),:),5,'first');
-                result(2) = cardNumFl(1);
-                result(3) = 1;
+                factorialBaseCards = floor((cardNumFl-1)./4) + 1;
+                result(2) = factorialBase2Dec(factorialBaseCards, NumCards, 5); %handvalue
+                result(3) = 1; %No valid kicker value
                 result(4:8) = (NumSuits * (cardNumFl - 1) + indFl(1));
                 break;
             end
@@ -158,7 +164,9 @@ for jjdx = 1:size(Hands,1)
                 result(4:6) = (NumSuits * (ind3(1) - 1) + suits3);
                 hand = setdiff(cards,result(4:6));
                 result(7:8) = hand(1:2);
-                result(3) = NumCards*floor((hand(1)-1)/4) + floor((hand(2)-1)/4) + 1; %kicker value
+%                 result(3) = NumCards*floor((hand(1)-1)/4) + floor((hand(2)-1)/4) + 1; %kicker value
+                factorialBaseCards = floor((hand(1:2)-1)./4) + 1;
+                result(3) = factorialBase2Dec(factorialBaseCards, NumCards, 2); %kickervalue
                 break;
             end
         case '2P'
@@ -186,14 +194,18 @@ for jjdx = 1:size(Hands,1)
                 result(4:5) = (NumSuits * (ind2(1) - 1) + suits2);
                 hand = setdiff(cards,result(4:5));
                 result(6:8) = hand(1:3);
-                result(3) = NumCards^2*floor((hand(1)-1)/4) + NumCards*floor((hand(2)-1)/4) + NumCards*floor((hand(3)-1)/4) + 1; %kicker value
+%                 result(3) = NumCards^2*floor((hand(1)-1)/4) + NumCards*floor((hand(2)-1)/4) + NumCards*floor((hand(3)-1)/4) + 1; %kicker value
+                factorialBaseCards = floor((hand(1:3)-1)./4) + 1;
+                result(3) = factorialBase2Dec(factorialBaseCards, NumCards, 3); %kickervalue
                 break;
             end
         case 'H'
             % High Card
             result(1) = jjdx;
             result(2) = floor((cards(1)-1)/4) + 1;
-            result(3) = NumCards^3*floor((cards(2)-1)/4) + NumCards^2*floor((cards(3)-1)/4) + NumCards*floor((cards(4)-1)/4) + floor((cards(5)-1)/4) + 1; %kicker value
+            factorialBaseCards = floor((cards(2:5)-1)./4) + 1;
+            result(3) = factorialBase2Dec(factorialBaseCards, NumCards, 4); %kickervalue
+%             result(3) = NumCards^3*floor((cards(2)-1)/4) + NumCards^2*floor((cards(3)-1)/4) + NumCards*floor((cards(4)-1)/4) + floor((cards(5)-1)/4) + 1; %kicker value
             result(4:8) = cards(1:5);
             break;
         otherwise
@@ -204,6 +216,7 @@ end
 maxHandValue = NumCards^2; %is atleast an upper limit
 maxKickerValue = NumCards^5; %is atleast an upper limit
 handRanking = result(1)*maxHandValue*maxKickerValue + result(2)*maxKickerValue + result(3);
+handResult = Hands{result(1)};
 bestCards = result(4:8);
 
 
