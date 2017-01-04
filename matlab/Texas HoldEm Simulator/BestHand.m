@@ -128,8 +128,7 @@ for jjdx = 1:size(Hands,1)
                 % Found FlushcardNumFl
                 result(1) = jjdx;
                 cardNumFl = find(handMatrix(indFl(1),:),5,'first');
-                factorialBaseCards = floor((cardNumFl-1)./4) + 1;
-                result(2) = factorialBase2Dec(factorialBaseCards, NumCards, 5); %handvalue
+                result(2) = factorialBase2Dec(cardNumFl, NumCards, 5); %handvalue
                 result(3) = 1; %No valid kicker value
                 result(4:8) = (NumSuits * (cardNumFl - 1) + indFl(1));
                 break;
