@@ -1,4 +1,4 @@
-function [playerRanking, bestCards] = HandResult(PlayersCards, commonCards)
+function playerRanking = handComparison(PlayersCards, commonCards)
 %Compares the results of several hands
 %PlayersCards   - is a Nx2 matrix, where N is the number of players
 %commonCards    - is a vector containing 3 to 5 elements which is the cards on the board
@@ -8,9 +8,8 @@ function [playerRanking, bestCards] = HandResult(PlayersCards, commonCards)
 %Get result for each player
 [~, NumPlayers] = size(PlayersCards);
 handRanking = zeros(NumPlayers,1);
-bestCards = zeros(NumPlayers,5);
 for jjj = 1:NumPlayers
-    [handRanking(jjj), bestCards(jjj,:)] = BestHand([PlayersCards(jjj,:) commonCards]);
+    handRanking(jjj) = BestHand([PlayersCards(jjj,:) commonCards]);
 end
 
 
