@@ -214,7 +214,7 @@ end
 
 maxHandValue = NumCards^2; %is atleast an upper limit
 maxKickerValue = NumCards^5; %is atleast an upper limit
-handRanking = result(1)*maxHandValue*maxKickerValue + result(2)*maxKickerValue + result(3);
+handRanking = result(1)*maxHandValue*maxKickerValue*4 + result(2)*maxKickerValue*2 + result(3); %TODO: Without multiplying by 4 and 2 here we get slightly wrong results. We should calculate handranking much better in the future
 handResult = Hands{result(1)};
 bestCards = result(4:8);
 
