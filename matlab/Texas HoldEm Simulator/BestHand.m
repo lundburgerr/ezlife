@@ -174,14 +174,14 @@ for jjdx = 1:size(Hands,1)
             if (length(ind2) >= 2)
                 % Found Two Pair
                 result(1) = jjdx;
-                result(2) = NumCards*floor((ind2(1)-1)/4) + floor((ind2(2)-1)/4) + 1;
+                result(2) = factorialBase2Dec(ind2, NumCards, 2); %handvalue
                 suits2a = find(handMatrix(:,ind2(1)),2,'first');
                 suits2b = find(handMatrix(:,ind2(2)),2,'first');
                 result(4:5) = (NumSuits * (ind2(1) - 1) + suits2a);
                 result(6:7) = (NumSuits * (ind2(2) - 1) + suits2b);
                 hand = setdiff(cards,result(2:5));
                 result(8) = hand(1);
-                result(3) = floor((hand(1)-1)/4) + 1;
+                result(3) = floor((hand(1)-1)/4) + 1; %kicker value
                 break;
             end
         case '1P'
