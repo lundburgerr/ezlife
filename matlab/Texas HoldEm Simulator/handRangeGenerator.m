@@ -200,25 +200,25 @@ end
 
 function file_export_to_workspace_Callback(hObject, eventdata, handles)
     global GUI_DATA;
-    handRange = [];
-    for ii = 1:GUI_DATA.gridSize %Run over columns
-        for jj = 1:GUI_DATA.gridSize %Run over rows
-            if jj>ii
-%                 hand = sprintf('%s%ss\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
-            elseif jj==ii
-%                 hand = sprintf('%s%s\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
-            else
-%                 hand = sprintf('%s%so\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
-            end
-            handles.(field) = uicontrol('Parent', gui, 'Style', 'text', ...
-                'Position', position, ...
-                'enable', 'inactive', ...
-                'String', hand, 'Tag', field, ...
-                'ButtonDownFcn', @ButtonDownFcn_Callback);
-            %set(handles.(field), 'ButtonDownFcn', @ButtonDownFcn_Callback);
-            %guihandles(handles.(field));
-        end
-    end
+%     handRange = [];
+%     for ii = 1:GUI_DATA.gridSize %Run over columns
+%         for jj = 1:GUI_DATA.gridSize %Run over rows
+%             if jj>ii
+% %                 hand = sprintf('%s%ss\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
+%             elseif jj==ii
+% %                 hand = sprintf('%s%s\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
+%             else
+% %                 hand = sprintf('%s%so\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
+%             end
+%             handles.(field) = uicontrol('Parent', gui, 'Style', 'text', ...
+%                 'Position', position, ...
+%                 'enable', 'inactive', ...
+%                 'String', hand, 'Tag', field, ...
+%                 'ButtonDownFcn', @ButtonDownFcn_Callback);
+%             %set(handles.(field), 'ButtonDownFcn', @ButtonDownFcn_Callback);
+%             %guihandles(handles.(field));
+%         end
+%     end
     assignin('base', 'handRange', GUI_DATA.gridProbability);
     delete(hObject);
 end
