@@ -5,17 +5,21 @@ function idx = handIndex(hand,n,k, nCk_mapping)
 %        nCk_mapping(n,k) = nchoosek(n, k-1);
 %    end
 %end
-
-
-%Sort hand
-t = sort(hand); %t=2.09, 1000000
-
+handOrig = hand;
 %Remap hand, (first card is a spade, rest dont matter)
 % suit = mod(t(1)-1, 4)+1;
 % t(mod(t, 4) == suit) = t(mod(t, 4) == suit)-suit+1;
- suit = (t(1)-1) - 4.*floor((t(1)-1)./4) + 1; %Fst modulus instead of built in in matlab which is slow
- index_swap_to_spade = t - 4.*floor(t./4) == suit;
- t(index_swap_to_spade) = t(index_swap_to_spade)-suit+1;
+card1 = min(hand);
+suit = (card1-1) - 4.*floor((card1-1)./4) + 1; %Fst modulus instead of built in in matlab which is slow
+if suit ~= 1
+    index_swap_to_spade = hand-1 - 4.*floor((hand-1)./4) + 1 == suit;
+    index_swap_away_from_spade = hand-1 - 4.*floor((hand-1)./4) + 1 == 1;
+    hand(index_swap_to_spade) = hand(index_swap_to_spade)-suit+1;
+    hand(index_swap_away_from_spade) = hand(index_swap_away_from_spade) + suit-1; %Change all old spades to whatever the first cards suit was
+end
+
+%Sort hand
+t = sort(hand); %t=2.09, 1000000
 
 
 %Loop over all cards and calculate factorial base without holes in decimal for all values
