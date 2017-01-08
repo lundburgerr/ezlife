@@ -28,6 +28,14 @@ handles.(field) = uimenu(gui, 'Label', 'File', 'Tag', field);
 field = 'file_export_to_workspace';
 handles.(field) = uimenu(handles.file_menu, 'Label', 'Export hand range to workspace', 'Tag', field, ...
                     'Callback', @file_export_to_workspace_Callback);
+                
+%% Create edit menu
+field = 'edit_menu';
+handles.(field) = uimenu(gui, 'Label', 'Edit', 'Tag', field);
+
+field = 'edit_clear_handrange';
+handles.(field) = uimenu(handles.edit_menu, 'Label', 'Clear hand range', 'Tag', field, ...
+                    'Callback', @edit_clear_handrange_Callback);
 
 %% Create card grid
 for ii = 1:gridSize %Run over columns
@@ -222,6 +230,22 @@ function file_export_to_workspace_Callback(hObject, eventdata, handles)
 %     end
     assignin('base', 'handRange', GUI_DATA.gridProbability);
     delete(hObject);
+end
+
+function edit_clear_handrange_Callback(hObject, eventdata, handles)
+    global GUI_DATA;
+    handles = GUI_DATA.handles;
+    square_size = 13;
+    for nx = 1:square_size
+        for ny = 1:square_size
+            GUI_DATA.gridProbability(ny, nx) = 0;
+            field = sprintf('hand_field_%dx%d', ny, nx);
+            set(handles.(field), 'BackgroundColor', [1, 1, 1]);
+            text_string = get(handles.(field), 'String');
+            text_string(2,:) = sprintf('(%.2f)', 0.00);
+            set(handles.(field), 'String', text_string);
+        end
+    end
 end
 
 
