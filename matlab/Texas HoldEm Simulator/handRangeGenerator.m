@@ -6,8 +6,8 @@ button_down = 0;
 
 Cards = {'A','K','Q','J','T','9','8','7','6','5','4','3','2'};
 gridSize = 13;
-nodeWidth = 50; %px
-nodeHeight = 50; %px
+nodeWidth = 30; %px
+nodeHeight = 30; %px
 margin = 20;
 guiWidth = gridSize*nodeWidth + 2*margin;
 guiHeight = gridSize*nodeHeight + 2*margin;
@@ -45,6 +45,7 @@ for ii = 1:gridSize %Run over columns
                 'Position', position, ...
                 'enable', 'inactive', ...
                 'String', hand, 'Tag', field, ...
+                'FontSize', 7, ...
                 'ButtonDownFcn', @ButtonDownFcn_Callback);
         %set(handles.(field), 'ButtonDownFcn', @ButtonDownFcn_Callback);
         %guihandles(handles.(field));
