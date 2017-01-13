@@ -17,6 +17,12 @@ sliderWidth = gridSize*nodeWidth;
 sliderHeight = 10;
 sliderMargin = 8;
 
+tableViewPanelWidth = 200;
+tableViewPanelHeight = 250;
+
+handRangeButtonsPanelWidth = 200;
+handRangeButtonsPanelHeight = 150;
+
 playerPanelWidth = 220;
 playerPanelHeight = 40;
 playerPanelMargin = 5;
@@ -33,8 +39,15 @@ buttonGroupPlayerHeight = 10*playerPanelHeight + 9*playerPanelMargin;
 handInformationPanelWidth = 300;
 handInformationPanelHeight = (10*playerPanelHeight+9*playerPanelMargin)/2;
 
+tournamentInfoPanelWidth = 300;
+tournamentInfoPanelHeight = 100;
+
+streetActionPanelWidth = 300;
+streetActionPanelHeight = 300;
+
 margin = 20;
-guiWidth = gridWidth + buttonGroupPlayerWidth + playerPanelWidth + 6*margin + handInformationPanelWidth;
+guiWidth = gridWidth + tableViewPanelWidth + buttonGroupPlayerWidth + ...
+            playerPanelWidth + 7*margin + handInformationPanelWidth + tournamentInfoPanelWidth;
 guiHeight = gridHeight + 3*sliderHeight+3*sliderMargin + 2*margin;
 gridProbability = zeros(gridSize, gridSize);
 
@@ -86,30 +99,47 @@ handles.(field) = uicontrol('Parent', gui, 'Style', 'slider', ...
                 'Tag', field, ...
                 'Callback',  {@slider_handRange_Callback, 'pocket'});
             
+%% Create panel containing information on table
+panel_startX = (gridWidth + 2*margin)/guiWidth;
+panel_startY = (guiHeight - tableViewPanelHeight - 0.5*margin)/guiHeight;
+field_panel = 'tableViewPanel';
+handles.(field_panel) = uipanel('FontSize',8,...
+    'Title', 'Table view', 'Tag', field_panel, ...
+    'Position',[panel_startX, panel_startY, tableViewPanelWidth/guiWidth, tableViewPanelHeight/guiHeight]);
+
+%% Create panel containing various preset choices for handrange selection
+panel_startX = (gridWidth + 2*margin)/guiWidth;
+panel_startY = (guiHeight - handRangeButtonsPanelHeight - tableViewPanelHeight - 1*margin)/guiHeight;
+field_panel = 'handRangeButtonsPanel';
+handles.(field_panel) = uipanel('FontSize',8,...
+    'Title', 'Hand range selection', 'Tag', field_panel, ...
+    'Position',[panel_startX, panel_startY, handRangeButtonsPanelWidth/guiWidth, handRangeButtonsPanelHeight/guiHeight]);
+
+            
 %% Create radiobuttons for each player to select which handrange
 buttongroup_startY = margin/guiHeight;
-buttongroup_startX = (gridWidth + 2*margin)/guiWidth;
+buttongroup_startX = (gridWidth + tableViewPanelWidth + 3*margin)/guiWidth;
 field_bg = 'buttongroup_player';
-handles.(field_bg) = uibuttongroup(...
+handles.(field_bg) = uibuttongroup('Tag', field_bg, ...
                   'Position',[buttongroup_startX, buttongroup_startY, buttonGroupPlayerWidth/guiWidth, buttonGroupPlayerHeight/guiHeight],...
                   'SelectionChangedFcn',@buttongroup_player_Callback);
 for p = 1:10
     field = sprintf('radiobutton_player%d', p);
     handles.(field) = uicontrol(handles.(field_bg),'Style', 'radiobutton',...
-                    'Position', ...
+                    'Tag', field, 'Position', ...
                     [0, buttonGroupPlayerHeight-(p-1/4)*(playerPanelHeight)-(p-1)*playerPanelMargin, buttonGroupPlayerWidth, buttonGroupPlayerWidth]...
                     );
 end
             
 %% Create panels for each player
 panel_startY = (guiHeight - 3*margin)/guiHeight;
-panel_startX = (gridWidth + 2*margin + buttonGroupPlayerWidth)/guiWidth;
+panel_startX = (gridWidth + + tableViewPanelWidth + 3*margin + buttonGroupPlayerWidth)/guiWidth;
 panel_deltaY = (playerPanelHeight+playerPanelMargin)/guiHeight;
 
 for p = 1:10
     field_panel = sprintf('panel_player%d', p);
     handles.(field_panel) = uipanel('FontSize',8,...
-                 'Tag', field, ...
+                 'Tag', field_panel, ...
                  'Position',[panel_startX, panel_startY-(p-1)*panel_deltaY, playerPanelWidth/guiWidth, playerPanelHeight/guiHeight]);
 
     %Field with stack sizes
@@ -151,23 +181,37 @@ for p = 1:10
 end
 
 %% Create hand information for hero
-panel_startX = (gridWidth + 3*margin + buttonGroupPlayerWidth + playerPanelWidth)/guiWidth;
+panel_startX = (gridWidth + tableViewPanelWidth + 4*margin + buttonGroupPlayerWidth + playerPanelWidth)/guiWidth;
 panel_startY = (guiHeight - handInformationPanelHeight - 0.5*margin)/guiHeight;
-field_panel = sprintf('panel_player%d', p);
+field_panel = 'heroHandInformation';
 handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Hero hand information', 'Tag', field, ...
+    'Title', 'Hero hand information', 'Tag', field_panel, ...
     'Position',[panel_startX, panel_startY, handInformationPanelWidth/guiWidth, handInformationPanelHeight/guiHeight]);
 
 %% Create hand information for villains
-panel_startX = (gridWidth + 3*margin + buttonGroupPlayerWidth + playerPanelWidth)/guiWidth;
+panel_startX = (gridWidth + tableViewPanelWidth + 4*margin + buttonGroupPlayerWidth + playerPanelWidth)/guiWidth;
 panel_startY = (guiHeight - 2*handInformationPanelHeight - 1*margin)/guiHeight;
-field_panel = sprintf('panel_player%d', p);
+field_panel = 'villainsHandInformation';
 handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Villains hand information', 'Tag', field, ...
+    'Title', 'Villains hand information', 'Tag', field_panel, ...
     'Position',[panel_startX, panel_startY, handInformationPanelWidth/guiWidth, handInformationPanelHeight/guiHeight]);
 
-%% Street action view
 
+%% Tournament information panel
+panel_startX = (gridWidth + tableViewPanelWidth + 5*margin + buttonGroupPlayerWidth + playerPanelWidth + handInformationPanelWidth)/guiWidth;
+panel_startY = (guiHeight - tournamentInfoPanelHeight - 0.5*margin)/guiHeight;
+field_panel = 'tournamentInformationPanel';
+handles.(field_panel) = uipanel('FontSize',8,...
+    'Title', 'Tournament information', 'Tag', field_panel, ...
+    'Position',[panel_startX, panel_startY, tournamentInfoPanelWidth/guiWidth, tournamentInfoPanelHeight/guiHeight]);
+
+%% Street action panel
+panel_startX = (gridWidth + tableViewPanelWidth + 5*margin + buttonGroupPlayerWidth + playerPanelWidth + handInformationPanelWidth)/guiWidth;
+panel_startY = (guiHeight - tournamentInfoPanelHeight - streetActionPanelHeight - 1*margin)/guiHeight;
+field_panel = 'streetActionViewPanel';
+handles.(field_panel) = uipanel('FontSize',8,...
+    'Title', 'Street action view', 'Tag', field_panel, ...
+    'Position',[panel_startX, panel_startY, streetActionPanelWidth/guiWidth, streetActionPanelHeight/guiHeight]);
 
 %% Create card grid
 for ii = 1:gridSize %Run over columns
