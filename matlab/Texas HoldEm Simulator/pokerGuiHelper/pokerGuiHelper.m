@@ -1,65 +1,61 @@
 function handRangeGenerator
 
-global button_down;
-global GUI_DATA;
-button_down = 0;
+%% Define sizes for different uicontrols in pixel (Gui Object Sizes)
+GOS.gridSize = 13;
+GOS.nodeWidth = 30; %px
+GOS.nodeHeight = 30; %px
+GOS.gridWidth = GOS.gridSize*GOS.nodeWidth;
+GOS.gridHeight = GOS.gridSize*GOS.nodeHeight;
 
-Cards = {'A','K','Q','J','T','9','8','7','6','5','4','3','2'};
+GOS.sliderWidth = GOS.gridSize*GOS.nodeWidth;
+GOS.sliderHeight = 10;
+GOS.sliderMargin = 8;
 
-%% Define sizes for different uicontrols in pixel
-gridSize = 13;
-nodeWidth = 30; %px
-nodeHeight = 30; %px
-gridWidth = gridSize*nodeWidth;
-gridHeight = gridSize*nodeHeight;
+GOS.tableViewPanelWidth = 200;
+GOS.tableViewPanelHeight = 250;
 
-sliderWidth = gridSize*nodeWidth;
-sliderHeight = 10;
-sliderMargin = 8;
+GOS.handRangeButtonsPanelWidth = 200;
+GOS.handRangeButtonsPanelHeight = 150;
 
-tableViewPanelWidth = 200;
-tableViewPanelHeight = 250;
+GOS.playerPanelWidth = 220;
+GOS.playerPanelHeight = 40;
+GOS.playerPanelMargin = 5;
+GOS.playerPanelStackWidth = 70;
+GOS.playerPanelStackHeight = GOS.playerPanelHeight - 2*GOS.playerPanelMargin;
+GOS.playerPanelICMWidth = 30;
+GOS.playerPanelICMHeight = GOS.playerPanelStackHeight;
+GOS.playerPanelActionHeight = (GOS.playerPanelHeight-2*GOS.playerPanelMargin)/2;
+GOS.playerPanelActionWidth = GOS.playerPanelActionHeight;
 
-handRangeButtonsPanelWidth = 200;
-handRangeButtonsPanelHeight = 150;
+GOS.buttonGroupPlayerWidth = 20;
+GOS.buttonGroupPlayerHeight = 10*GOS.playerPanelHeight + 9*GOS.playerPanelMargin;
 
-playerPanelWidth = 220;
-playerPanelHeight = 40;
-playerPanelMargin = 5;
-playerPanelStackWidth = 70;
-playerPanelStackHeight = playerPanelHeight - 2*playerPanelMargin;
-playerPanelICMWidth = 30;
-playerPanelICMHeight = playerPanelStackHeight;
-playerPanelActionHeight = (playerPanelHeight-2*playerPanelMargin)/2;
-playerPanelActionWidth = playerPanelActionHeight;
+GOS.handInformationPanelWidth = 300;
+GOS.handInformationPanelHeight = (10*GOS.playerPanelHeight+9*GOS.playerPanelMargin)/2;
 
-buttonGroupPlayerWidth = 20;
-buttonGroupPlayerHeight = 10*playerPanelHeight + 9*playerPanelMargin;
+GOS.tournamentInfoPanelWidth = 300;
+GOS.tournamentInfoPanelHeight = 100;
 
-handInformationPanelWidth = 300;
-handInformationPanelHeight = (10*playerPanelHeight+9*playerPanelMargin)/2;
+GOS.streetActionPanelWidth = 300;
+GOS.streetActionPanelHeight = 300;
 
-tournamentInfoPanelWidth = 300;
-tournamentInfoPanelHeight = 100;
+GOS.margin = 20;
+GOS.guiWidth = GOS.gridWidth + GOS.tableViewPanelWidth + GOS.buttonGroupPlayerWidth + ...
+            GOS.playerPanelWidth + 7*GOS.margin + GOS.handInformationPanelWidth + GOS.tournamentInfoPanelWidth;
+GOS.guiHeight = GOS.gridHeight + 3*GOS.sliderHeight+3*GOS.sliderMargin + 2*GOS.margin;
 
-streetActionPanelWidth = 300;
-streetActionPanelHeight = 300;
-
-margin = 20;
-guiWidth = gridWidth + tableViewPanelWidth + buttonGroupPlayerWidth + ...
-            playerPanelWidth + 7*margin + handInformationPanelWidth + tournamentInfoPanelWidth;
-guiHeight = gridHeight + 3*sliderHeight+3*sliderMargin + 2*margin;
-gridProbability = zeros(gridSize, gridSize);
+%% Set initial values for gridProbability
+gridProbability = zeros(GOS.gridSize, GOS.gridSize);
 
 %% Create main GUI
 %Create main figure
 title_gui = 'Hand range generator';
-gui = figure('Position', [100 50 guiWidth guiHeight], 'Name', title_gui, 'NumberTitle', 'off', 'Tag', 'gui');
+gui = figure('Position', [100 50 GOS.guiWidth GOS.guiHeight], 'Name', title_gui, 'NumberTitle', 'off', 'Tag', 'gui');
 set(gui, 'MenuBar', 'none', 'Resize','Off');
 handles.gui = gui;
 %guihandles(handles.f_gui);
 
-%% Create file menu
+%Create file menu
 field = 'file_menu';
 handles.(field) = uimenu(gui, 'Label', 'File', 'Tag', field);
 
@@ -67,372 +63,233 @@ field = 'file_export_to_workspace';
 handles.(field) = uimenu(handles.file_menu, 'Label', 'Export hand range to workspace', 'Tag', field, ...
                     'Callback', @file_export_to_workspace_Callback);
                 
-%% Create edit menu
+%Create edit menu
 field = 'edit_menu';
 handles.(field) = uimenu(gui, 'Label', 'Edit', 'Tag', field);
 
 field = 'edit_clear_handrange';
 handles.(field) = uimenu(handles.edit_menu, 'Label', 'Clear hand range', 'Tag', field, ...
                     'Callback', @edit_clear_handrange_Callback);
+
+%% Fill in GUI Objects
+%Create card grid
+handles = fill_card_grid(handles, gridProbability, GOS);
+            
+%Create panel containing information on table
+handles = fill_tournament_info(handles, GOS);
+
+%Create panel containing various preset choices for handrange selection
+handles = fill_hand_range_selection(handles, GOS);
+            
+%Create radiobuttons for each player to select which handrange
+handles = fill_player_selection_radio_buttons(handles, GOS);
+       
+%Create panels for each player
+handles = fill_player_panels(handles, GOS);
+
+%Create hand information for hero
+handles = fill_hero_hand_information(handles, GOS);
+
+%Create hand information for villains
+handles = fill_villains_hand_information(handles, GOS);
+
+%Tournament information panel
+handles = fill_tournament_information(handles, GOS);
+
+%Street action panel
+handles = fill_street_action_view(handles, GOS);
+
+
+%% Save guidata
+gui_data.GOS = GOS;
+gui_data.gridProbability = gridProbability;
+gui_data.handles = handles;
+gui_data.button_down = 0;
+gui_data.addOrSubtract = 1;
+guidata(handles.gui, gui_data);
+
+end
+
+%% Fill GUI with GUI-objects
+function [handles, gridProbability] = fill_card_grid(handles, gridProbability, GOS)    
+    Cards = {'A','K','Q','J','T','9','8','7','6','5','4','3','2'};
+    for ii = 1:GOS.gridSize %Run over columns
+        for jj = 1:GOS.gridSize %Run over rows
+            field = sprintf('hand_field_%dx%d', jj, ii);
+            position = [(ii-1)*GOS.nodeWidth+GOS.margin, GOS.guiHeight-GOS.margin-jj*GOS.nodeHeight, GOS.nodeWidth, GOS.nodeHeight];
+            if jj>ii
+                hand = sprintf('%s%ss\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
+            elseif jj==ii
+                hand = sprintf('%s%s\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
+            else
+                hand = sprintf('%s%so\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
+            end
+            handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'text', ...
+                    'Position', position, ...
+                    'enable', 'inactive', ...
+                    'String', hand, 'Tag', field, ...
+                    'FontSize', 7, ...
+                    'BackgroundColor', 'white', ...
+                    'ButtonDownFcn', @ButtonDownFcn_Callback);
+            %set(handles.(field), 'ButtonDownFcn', @ButtonDownFcn_Callback);
+            %guihandles(handles.(field));
+        end
+    end
+
+    %% Create hand range sliders
+    slider_startY = GOS.guiHeight-GOS.gridHeight - 2*GOS.sliderMargin - GOS.margin;
+    slider_startX = GOS.margin;
+    %Slider for suited hands
+    field = 'slider_handRange';
+    handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
+                    'Position', [slider_startX, slider_startY, GOS.sliderWidth, GOS.sliderHeight], ...
+                    'Tag', field, ...
+                    'Callback',  {@slider_handRange_Callback, 'suited'});
+
+    %Slider for offsuited hands
+    field = 'slider_handRange';
+    handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
+                    'Position', [slider_startX, slider_startY-2*GOS.sliderMargin, GOS.sliderWidth, GOS.sliderHeight], ...
+                    'Tag', field, ...
+                    'Callback',  {@slider_handRange_Callback, 'offsuited'});
+
+    %Slider for pocket pairs
+    field = 'slider_handRange';
+    handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
+                    'Position', [slider_startX, slider_startY-4*GOS.sliderMargin, GOS.sliderWidth, GOS.sliderHeight], ...
+                    'Tag', field, ...
+                    'Callback',  {@slider_handRange_Callback, 'pocket'});
                 
-%% Create hand range sliders
-slider_startY = guiHeight-gridHeight - 2*sliderMargin - margin;
-slider_startX = margin;
-%Slider for suited hands
-field = 'slider_handRange';
-handles.(field) = uicontrol('Parent', gui, 'Style', 'slider', ...
-                'Position', [slider_startX, slider_startY, sliderWidth, sliderHeight], ...
-                'Tag', field, ...
-                'Callback',  {@slider_handRange_Callback, 'suited'});
-
-%Slider for offsuited hands
-field = 'slider_handRange';
-handles.(field) = uicontrol('Parent', gui, 'Style', 'slider', ...
-                'Position', [slider_startX, slider_startY-2*sliderMargin, sliderWidth, sliderHeight], ...
-                'Tag', field, ...
-                'Callback',  {@slider_handRange_Callback, 'offsuited'});
-
-%Slider for pocket pairs
-field = 'slider_handRange';
-handles.(field) = uicontrol('Parent', gui, 'Style', 'slider', ...
-                'Position', [slider_startX, slider_startY-4*sliderMargin, sliderWidth, sliderHeight], ...
-                'Tag', field, ...
-                'Callback',  {@slider_handRange_Callback, 'pocket'});
-            
-%% Create panel containing information on table
-panel_startX = (gridWidth + 2*margin)/guiWidth;
-panel_startY = (guiHeight - tableViewPanelHeight - 0.5*margin)/guiHeight;
-field_panel = 'tableViewPanel';
-handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Table view', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, tableViewPanelWidth/guiWidth, tableViewPanelHeight/guiHeight]);
-
-%% Create panel containing various preset choices for handrange selection
-panel_startX = (gridWidth + 2*margin)/guiWidth;
-panel_startY = (guiHeight - handRangeButtonsPanelHeight - tableViewPanelHeight - 1*margin)/guiHeight;
-field_panel = 'handRangeButtonsPanel';
-handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Hand range selection', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, handRangeButtonsPanelWidth/guiWidth, handRangeButtonsPanelHeight/guiHeight]);
-
-            
-%% Create radiobuttons for each player to select which handrange
-buttongroup_startY = margin/guiHeight;
-buttongroup_startX = (gridWidth + tableViewPanelWidth + 3*margin)/guiWidth;
-field_bg = 'buttongroup_player';
-handles.(field_bg) = uibuttongroup('Tag', field_bg, ...
-                  'Position',[buttongroup_startX, buttongroup_startY, buttonGroupPlayerWidth/guiWidth, buttonGroupPlayerHeight/guiHeight],...
-                  'SelectionChangedFcn',@buttongroup_player_Callback);
-for p = 1:10
-    field = sprintf('radiobutton_player%d', p);
-    handles.(field) = uicontrol(handles.(field_bg),'Style', 'radiobutton',...
-                    'Tag', field, 'Position', ...
-                    [0, buttonGroupPlayerHeight-(p-1/4)*(playerPanelHeight)-(p-1)*playerPanelMargin, buttonGroupPlayerWidth, buttonGroupPlayerWidth]...
-                    );
+    %Set callbacks for button down on grid
+    set(handles.gui,'ButtonDownFcn',@ButtonDownFcn_Callback);
 end
-            
-%% Create panels for each player
-panel_startY = (guiHeight - 3*margin)/guiHeight;
-panel_startX = (gridWidth + + tableViewPanelWidth + 3*margin + buttonGroupPlayerWidth)/guiWidth;
-panel_deltaY = (playerPanelHeight+playerPanelMargin)/guiHeight;
 
-for p = 1:10
-    field_panel = sprintf('panel_player%d', p);
+function handles = fill_tournament_info(handles, GOS)
+    panel_startX = (GOS.gridWidth + 2*GOS.margin)/GOS.guiWidth;
+    panel_startY = (GOS.guiHeight - GOS.tableViewPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
+    field_panel = 'tableViewPanel';
     handles.(field_panel) = uipanel('FontSize',8,...
-                 'Tag', field_panel, ...
-                 'Position',[panel_startX, panel_startY-(p-1)*panel_deltaY, playerPanelWidth/guiWidth, playerPanelHeight/guiHeight]);
-
-    %Field with stack sizes
-    field = sprintf('stack_player%d', p);
-    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
-        'Position', [0, playerPanelHeight-playerPanelStackHeight-playerPanelMargin, playerPanelStackWidth, playerPanelStackHeight], ...
-        'String', '1500');
-
-    %Field with chips put in the pot for player
-    field = sprintf('chipsPlayed_player%d', p);
-    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
-        'Position', [playerPanelStackWidth+playerPanelMargin, playerPanelHeight-playerPanelStackHeight-playerPanelMargin, playerPanelStackWidth, playerPanelStackHeight], ...
-        'String', '0');
-
-    %Action buttons
-    field = sprintf('raiseButton_player%d', p);
-    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
-        'Position', [2*playerPanelStackWidth+2*playerPanelMargin, playerPanelHeight-playerPanelMargin-playerPanelActionHeight, playerPanelActionWidth, playerPanelActionHeight], ...
-        'BackgroundColor', 'Red', ...
-        'String', 'R');
-    field = sprintf('callButton_player%d', p);
-    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
-        'Position', [2*playerPanelStackWidth+2*playerPanelMargin, playerPanelHeight-playerPanelMargin-2*playerPanelActionHeight, playerPanelActionWidth, playerPanelActionHeight], ...
-        'BackgroundColor', 'Green', ...
-        'String', 'C');
-    field = sprintf('foldButton_player%d', p);
-    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
-        'Position', [2*playerPanelStackWidth+2*playerPanelMargin+playerPanelActionWidth, playerPanelHeight-playerPanelMargin-1.5*playerPanelActionHeight, playerPanelActionWidth, playerPanelActionHeight], ...
-        'BackgroundColor', 'yellow', ...
-        'String', 'F');
-
-    %Field with ICM for player
-    field = sprintf('chipsPlayed_player%d', p);
-    position = [2*playerPanelStackWidth+3*playerPanelMargin+2*playerPanelActionWidth, playerPanelHeight-playerPanelICMHeight-playerPanelMargin, playerPanelICMWidth, playerPanelICMHeight];
-    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'text', ...
-        'Position', position, ...
-        'BackgroundColor', 'white', ...
-        'String', '0%');
+        'Title', 'Table view', 'Tag', field_panel, ...
+        'Position',[panel_startX, panel_startY, GOS.tableViewPanelWidth/GOS.guiWidth, GOS.tableViewPanelHeight/GOS.guiHeight]);
 end
 
-%% Create hand information for hero
-panel_startX = (gridWidth + tableViewPanelWidth + 4*margin + buttonGroupPlayerWidth + playerPanelWidth)/guiWidth;
-panel_startY = (guiHeight - handInformationPanelHeight - 0.5*margin)/guiHeight;
+function handles = fill_hand_range_selection(handles, GOS)
+    panel_startX = (GOS.gridWidth + 2*GOS.margin)/GOS.guiWidth;
+    panel_startY = (GOS.guiHeight - GOS.handRangeButtonsPanelHeight - GOS.tableViewPanelHeight - 1*GOS.margin)/GOS.guiHeight;
+    field_panel = 'handRangeButtonsPanel';
+    handles.(field_panel) = uipanel('FontSize',8,...
+        'Title', 'Hand range selection', 'Tag', field_panel, ...
+        'Position',[panel_startX, panel_startY, GOS.handRangeButtonsPanelWidth/GOS.guiWidth, GOS.handRangeButtonsPanelHeight/GOS.guiHeight]);
+end
+
+function handles = fill_player_selection_radio_buttons(handles, GOS)
+    buttongroup_startY = GOS.margin/GOS.guiHeight;
+    buttongroup_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 3*GOS.margin)/GOS.guiWidth;
+    field_bg = 'buttongroup_player';
+    handles.(field_bg) = uibuttongroup('Tag', field_bg, ...
+        'Position',[buttongroup_startX, buttongroup_startY, GOS.buttonGroupPlayerWidth/GOS.guiWidth, GOS.buttonGroupPlayerHeight/GOS.guiHeight],...
+        'SelectionChangedFcn',@buttongroup_player_Callback);
+    for p = 1:10
+        field = sprintf('radiobutton_player%d', p);
+        handles.(field) = uicontrol(handles.(field_bg),'Style', 'radiobutton',...
+            'Tag', field, 'Position', ...
+            [0, GOS.buttonGroupPlayerHeight-(p-1/4)*(GOS.playerPanelHeight)-(p-1)*GOS.playerPanelMargin, GOS.buttonGroupPlayerWidth, GOS.buttonGroupPlayerWidth]...
+            );
+    end
+end
+
+function handles = fill_player_panels(handles, GOS)
+    panel_startY = (GOS.guiHeight - 3*GOS.margin)/GOS.guiHeight;
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 3*GOS.margin + GOS.buttonGroupPlayerWidth)/GOS.guiWidth;
+    panel_deltaY = (GOS.playerPanelHeight+GOS.playerPanelMargin)/GOS.guiHeight;
+
+    for p = 1:10
+        field_panel = sprintf('panel_player%d', p);
+        handles.(field_panel) = uipanel('FontSize',8,...
+                     'Tag', field_panel, ...
+                     'Position',[panel_startX, panel_startY-(p-1)*panel_deltaY, ...
+                                GOS.playerPanelWidth/GOS.guiWidth, GOS.playerPanelHeight/GOS.guiHeight]);
+
+        %Field with stack sizes
+        field = sprintf('stack_player%d', p);
+        handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+            'Position', [0, GOS.playerPanelHeight-GOS.playerPanelStackHeight-GOS.playerPanelMargin, ...
+                        GOS.playerPanelStackWidth, GOS.playerPanelStackHeight], ...
+            'String', '1500');
+
+        %Field with chips put in the pot for player
+        field = sprintf('chipsPlayed_player%d', p);
+        handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+            'Position', [GOS.playerPanelStackWidth+GOS.playerPanelMargin, GOS.playerPanelHeight-GOS.playerPanelStackHeight-GOS.playerPanelMargin, ...
+                        GOS.playerPanelStackWidth, GOS.playerPanelStackHeight], ...
+            'String', '0');
+
+        %Action buttons
+        field = sprintf('raiseButton_player%d', p);
+        handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
+            'Position', [2*GOS.playerPanelStackWidth+2*GOS.playerPanelMargin, GOS.playerPanelHeight-GOS.playerPanelMargin-GOS.playerPanelActionHeight, ...
+                        GOS.playerPanelActionWidth, GOS.playerPanelActionHeight], ...
+            'BackgroundColor', 'Red', ...
+            'String', 'R');
+        field = sprintf('callButton_player%d', p);
+        handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
+            'Position', [2*GOS.playerPanelStackWidth+2*GOS.playerPanelMargin, GOS.playerPanelHeight-GOS.playerPanelMargin-2*GOS.playerPanelActionHeight, ...
+                        GOS.playerPanelActionWidth, GOS.playerPanelActionHeight], ...
+            'BackgroundColor', 'Green', ...
+            'String', 'C');
+        field = sprintf('foldButton_player%d', p);
+        handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
+            'Position', [2*GOS.playerPanelStackWidth+2*GOS.playerPanelMargin+GOS.playerPanelActionWidth, GOS.playerPanelHeight-GOS.playerPanelMargin-1.5*GOS.playerPanelActionHeight, ...
+                        GOS.playerPanelActionWidth, GOS.playerPanelActionHeight], ...
+            'BackgroundColor', 'yellow', ...
+            'String', 'F');
+
+        %Field with ICM for player
+        field = sprintf('chipsPlayed_player%d', p);
+        position = [2*GOS.playerPanelStackWidth+3*GOS.playerPanelMargin+2*GOS.playerPanelActionWidth, GOS.playerPanelHeight-GOS.playerPanelICMHeight-GOS.playerPanelMargin, ...
+                    GOS.playerPanelICMWidth, GOS.playerPanelICMHeight];
+        handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'text', ...
+            'Position', position, ...
+            'BackgroundColor', 'white', ...
+            'String', '0%');
+    end
+end
+
+function handles = fill_hero_hand_information(handles, GOS)
+panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth)/GOS.guiWidth;
+panel_startY = (GOS.guiHeight - GOS.handInformationPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
 field_panel = 'heroHandInformation';
 handles.(field_panel) = uipanel('FontSize',8,...
     'Title', 'Hero hand information', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, handInformationPanelWidth/guiWidth, handInformationPanelHeight/guiHeight]);
-
-%% Create hand information for villains
-panel_startX = (gridWidth + tableViewPanelWidth + 4*margin + buttonGroupPlayerWidth + playerPanelWidth)/guiWidth;
-panel_startY = (guiHeight - 2*handInformationPanelHeight - 1*margin)/guiHeight;
-field_panel = 'villainsHandInformation';
-handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Villains hand information', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, handInformationPanelWidth/guiWidth, handInformationPanelHeight/guiHeight]);
-
-
-%% Tournament information panel
-panel_startX = (gridWidth + tableViewPanelWidth + 5*margin + buttonGroupPlayerWidth + playerPanelWidth + handInformationPanelWidth)/guiWidth;
-panel_startY = (guiHeight - tournamentInfoPanelHeight - 0.5*margin)/guiHeight;
-field_panel = 'tournamentInformationPanel';
-handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Tournament information', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, tournamentInfoPanelWidth/guiWidth, tournamentInfoPanelHeight/guiHeight]);
-
-%% Street action panel
-panel_startX = (gridWidth + tableViewPanelWidth + 5*margin + buttonGroupPlayerWidth + playerPanelWidth + handInformationPanelWidth)/guiWidth;
-panel_startY = (guiHeight - tournamentInfoPanelHeight - streetActionPanelHeight - 1*margin)/guiHeight;
-field_panel = 'streetActionViewPanel';
-handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Street action view', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, streetActionPanelWidth/guiWidth, streetActionPanelHeight/guiHeight]);
-
-%% Create card grid
-for ii = 1:gridSize %Run over columns
-    for jj = 1:gridSize %Run over rows
-        field = sprintf('hand_field_%dx%d', jj, ii);
-        position = [(ii-1)*nodeWidth+margin, guiHeight-margin-jj*nodeHeight, nodeWidth, nodeHeight];
-        if jj>ii
-            hand = sprintf('%s%ss\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
-        elseif jj==ii
-            hand = sprintf('%s%s\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
-        else
-            hand = sprintf('%s%so\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
-        end
-        handles.(field) = uicontrol('Parent', gui, 'Style', 'text', ...
-                'Position', position, ...
-                'enable', 'inactive', ...
-                'String', hand, 'Tag', field, ...
-                'FontSize', 7, ...
-                'BackgroundColor', 'white', ...
-                'ButtonDownFcn', @ButtonDownFcn_Callback);
-        %set(handles.(field), 'ButtonDownFcn', @ButtonDownFcn_Callback);
-        %guihandles(handles.(field));
-    end
+    'Position',[panel_startX, panel_startY, GOS.handInformationPanelWidth/GOS.guiWidth, GOS.handInformationPanelHeight/GOS.guiHeight]);
 end
 
-%Save guidata
-gui_data.guiWidth = guiWidth;
-gui_data.guiHeight = guiHeight;
-gui_data.gridSize = gridSize;
-gui_data.nodeWidth = nodeWidth; %px
-gui_data.nodeHeight = nodeHeight; %px
-gui_data.margin = margin;
-gui_data.gridProbability = gridProbability;
-gui_data.handles = handles;
-GUI_DATA = gui_data;
-
-%Set callbacks
-set(gui,'ButtonDownFcn',@ButtonDownFcn_Callback);
-
+function handles = fill_villains_hand_information(handles, GOS)
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth +GOS. playerPanelWidth)/GOS.guiWidth;
+    panel_startY = (GOS.guiHeight - 2*GOS.handInformationPanelHeight - 1*GOS.margin)/GOS.guiHeight;
+    field_panel = 'villainsHandInformation';
+    handles.(field_panel) = uipanel('FontSize',8,...
+        'Title', 'Villains hand information', 'Tag', field_panel, ...
+        'Position',[panel_startX, panel_startY, GOS.handInformationPanelWidth/GOS.guiWidth, GOS.handInformationPanelHeight/GOS.guiHeight]);
 end
 
-
-function ButtonDownFcn_Callback(hObject, eventdata)
-    global button_down;
-    global GUI_DATA;
-
-    %Already pushed?
-    if button_down
-        return;
-    end
-    button_down = 1;
-    
-    %Get GUI handles
-    %gui_data = guidata(hObject);
-    handles = GUI_DATA.handles;
-    
-    %% Add callbacks to figure for moving the point
-    mousebutton = get(gcf, 'SelectionType');
-    if strcmp(mousebutton, 'normal')   %Left click -- Add probability
-        GUI_DATA.addOrSubtract = 1;
-        %guidata(handles.gui, gui_data);
-        set(handles.gui, 'Interruptible', 'off')
-        set(handles.gui,'WindowButtonUpFcn',@WindowButtonUpFcn_Callback);
-        set(handles.gui,'WindowButtonMotionFcn',@WindowButtonMotionFcn_Callback);
-    elseif strcmp(mousebutton, 'alt') %Right click -- Subtract probability
-        GUI_DATA.addOrSubtract = -1;
-        %guidata(handles.gui, gui_data);
-        set(handles.gui, 'Interruptible', 'off')
-        set(handles.gui,'WindowButtonUpFcn',@WindowButtonUpFcn_Callback);
-        set(handles.gui,'WindowButtonMotionFcn',@WindowButtonMotionFcn_Callback);
-    end
+function handles = fill_tournament_information(handles, GOS)
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 5*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.handInformationPanelWidth)/GOS.guiWidth;
+    panel_startY = (GOS.guiHeight - GOS.tournamentInfoPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
+    field_panel = 'tournamentInformationPanel';
+    handles.(field_panel) = uipanel('FontSize',8,...
+        'Title', 'Tournament information', 'Tag', field_panel, ...
+        'Position',[panel_startX, panel_startY, GOS.tournamentInfoPanelWidth/GOS.guiWidth, GOS.tournamentInfoPanelHeight/GOS.guiHeight]);
 end
 
-%Remove callbacks for moving
-function WindowButtonUpFcn_Callback(hObject, eventdata)
-    global button_down;
-    global GUI_DATA;
-
-    handles = GUI_DATA.handles;
-    set(handles.gui, 'Interruptible', 'on')
-    set(handles.gui,'WindowButtonUpFcn','');
-    set(handles.gui,'WindowButtonMotionFcn','');
-    button_down = 0;
+function handles = fill_street_action_view(handles, GOS)
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 5*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.handInformationPanelWidth)/GOS.guiWidth;
+    panel_startY = (GOS.guiHeight - GOS.tournamentInfoPanelHeight - GOS.streetActionPanelHeight - 1*GOS.margin)/GOS.guiHeight;
+    field_panel = 'streetActionViewPanel';
+    handles.(field_panel) = uipanel('FontSize',8,...
+        'Title', 'Street action view', 'Tag', field_panel, ...
+        'Position',[panel_startX, panel_startY, GOS.streetActionPanelWidth/GOS.guiWidth, GOS.streetActionPanelHeight/GOS.guiHeight]);
 end
 
-%Add or subtract 
-function WindowButtonMotionFcn_Callback(hObject, eventdata)
-    persistent delay_last_change;
-    global GUI_DATA;
-    handles = GUI_DATA.handles;
-    addOrSubtract = GUI_DATA.addOrSubtract;
-
-    %Initialize persistent variable
-    if isempty(delay_last_change)
-        delay_last_change = clock();
-    end
-    
-    if etime(clock(), delay_last_change) < 0.02
-        return;
-    end
-    
-    %Get current grid point
-    C = hObject.CurrentPoint; %hObject.SelectionType
-    jj = floor((GUI_DATA.guiHeight-GUI_DATA.margin-C(2))/GUI_DATA.nodeWidth) + 1; %Which row?
-    ii = floor((C(1)-GUI_DATA.margin)/GUI_DATA.nodeWidth) + 1;                    %Which column?
-    
-    %Add/Subtract probability to current grid point
-    if( ii >= 1 && ii <= GUI_DATA.gridSize && ...
-            jj >= 1 && jj <= GUI_DATA.gridSize)
-%         GUI_DATA.gridProbability(jj, ii) = GUI_DATA.gridProbability(jj, ii) + addOrSubtract*0.05;
-%         GUI_DATA.gridProbability(jj, ii) = min(GUI_DATA.gridProbability(jj, ii), 1);
-%         GUI_DATA.gridProbability(jj, ii) = max(GUI_DATA.gridProbability(jj, ii), 0);
-        
-        %% TODO Move nearby points
-        %Create distance matrix from center
-        square_size = 3;
-        fall_off_constant = 1; %The higher the faster
-        middle_ind = floor(square_size/2)+1;
-        distance_matrix = zeros(square_size);
-        for nx = 1:square_size
-            for ny = 1:square_size
-                if ii == jj
-                    if nx == ny
-                        distance_matrix(ny,nx) = sqrt((middle_ind-nx)^2 + (middle_ind-ny)^2)^fall_off_constant;
-                    else
-                        distance_matrix(ny,nx) = inf;
-                    end
-                elseif ii > jj
-                    if ii+nx > jj+ny
-                        distance_matrix(ny,nx) = sqrt((middle_ind-nx)^2 + (middle_ind-ny)^2)^fall_off_constant;
-                    else
-                        distance_matrix(ny,nx) = inf;
-                    end
-                elseif ii < jj
-                    if ii+nx < jj+ny
-                        distance_matrix(ny,nx) = sqrt((middle_ind-nx)^2 + (middle_ind-ny)^2)^fall_off_constant;
-                    else
-                        distance_matrix(ny,nx) = inf;
-                    end
-                end
-            end
-        end
-        
-        %Create gaussian distr. matrix relative to middle
-        exp_mat = exp(-(distance_matrix));
-        
-        %Move surrounding points in a logarithmic fashion
-        dp = 0.05; %change in probability at middle
-        dp_mat = dp*exp_mat;
-        for nx = -floor(square_size/2):floor(square_size/2)
-            if ii+nx < 1 || ii+nx > GUI_DATA.gridSize, continue; end
-            for ny = -floor(square_size/2):floor(square_size/2)
-                if jj+ny < 1 || jj+ny > GUI_DATA.gridSize, continue; end
-                dp_ind_y = ny + floor(square_size/2) + 1;
-                dp_ind_x = nx + floor(square_size/2) + 1;
-                GUI_DATA.gridProbability(jj+ny, ii+nx) = GUI_DATA.gridProbability(jj+ny, ii+nx) + addOrSubtract*dp_mat(dp_ind_y, dp_ind_x);
-                GUI_DATA.gridProbability(jj+ny, ii+nx) = min(GUI_DATA.gridProbability(jj+ny, ii+nx), 1);
-                GUI_DATA.gridProbability(jj+ny, ii+nx) = max(GUI_DATA.gridProbability(jj+ny, ii+nx), 0);
-                
-                field = sprintf('hand_field_%dx%d', jj+ny, ii+nx);
-                inverted_green = [1 0.4 0.9];
-                set(handles.(field), 'BackgroundColor', [1, 1, 1] - inverted_green*GUI_DATA.gridProbability(jj+ny, ii+nx))
-                text_string = get(handles.(field), 'String');
-                text_string(2,:) = sprintf('(%.2f)', GUI_DATA.gridProbability(jj+ny, ii+nx));
-                set(handles.(field), 'String', text_string);
-            end
-        end
-        
-        delay_last_change = clock();
-    end
-end
-
-function file_export_to_workspace_Callback(hObject, eventdata)
-    global GUI_DATA;
-%     handRange = [];
-%     for ii = 1:GUI_DATA.gridSize %Run over columns
-%         for jj = 1:GUI_DATA.gridSize %Run over rows
-%             if jj>ii
-% %                 hand = sprintf('%s%ss\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
-%             elseif jj==ii
-% %                 hand = sprintf('%s%s\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
-%             else
-% %                 hand = sprintf('%s%so\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
-%             end
-%             handles.(field) = uicontrol('Parent', gui, 'Style', 'text', ...
-%                 'Position', position, ...
-%                 'enable', 'inactive', ...
-%                 'String', hand, 'Tag', field, ...
-%                 'ButtonDownFcn', @ButtonDownFcn_Callback);
-%             %set(handles.(field), 'ButtonDownFcn', @ButtonDownFcn_Callback);
-%             %guihandles(handles.(field));
-%         end
-%     end
-    assignin('base', 'handRange', GUI_DATA.gridProbability);
-    delete(hObject);
-end
-
-function edit_clear_handrange_Callback(hObject, eventdata)
-    global GUI_DATA;
-    handles = GUI_DATA.handles;
-    square_size = 13;
-    for nx = 1:square_size
-        for ny = 1:square_size
-            GUI_DATA.gridProbability(ny, nx) = 0;
-            field = sprintf('hand_field_%dx%d', ny, nx);
-            set(handles.(field), 'BackgroundColor', [1, 1, 1]);
-            text_string = get(handles.(field), 'String');
-            text_string(2,:) = sprintf('(%.2f)', 0.00);
-            set(handles.(field), 'String', text_string);
-        end
-    end
-end
-
-function slider_handRange_Callback(hObject, eventdata, type)
-%TODO: Finish this function, use Sklansky-karlson hand rankings
-    disp(type);
-end
-
-function buttongroup_player_Callback(hObject, eventdata)
-%TODO: Finish this function, show handrange for selected player
-    eventdata
-end
 
 
