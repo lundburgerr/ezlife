@@ -76,7 +76,7 @@ handles.(field) = uimenu(handles.edit_menu, 'Label', 'Clear hand range', 'Tag', 
 handles = fill_card_grid(handles, gridProbability, GOS);
             
 %Create panel containing information on table
-handles = fill_tournament_info(handles, GOS);
+handles = fill_table_view_info(handles, GOS);
 
 %Create panel containing various preset choices for handrange selection
 handles = fill_hand_range_selection(handles, GOS);
@@ -99,6 +99,22 @@ handles = fill_tournament_information(handles, GOS);
 %Street action panel
 handles = fill_street_action_view(handles, GOS);
 
+%% Create PokerPlayer objects
+handles_handrange_grid = zeros(13, 13);
+for nx = 1:13 %TODO: We shoould have all these handles below in a panel which should be the only handle we pass in to the PP object
+    for ny = 1:13
+        field = sprintf('hand_field_%dx%d', ny, nx);
+        handles_handrange_grid(ny, nx) = handles.(field);
+    end
+end
+for p = 1:10
+    field_panel = sprintf('panel_player%d', p);
+    handle_player_panel = handles.(field_panel);
+    pp_handles(p) = PokerPlayer(handles_handrange_grid, handle_player_panel);
+    pp_handles(p).setStack(1000);
+    pp_handles(p).setIcm(0.1);
+end
+
 
 %% Save guidata
 gui_data.GOS = GOS;
@@ -106,6 +122,8 @@ gui_data.gridProbability = gridProbability;
 gui_data.handles = handles;
 gui_data.button_down = 0;
 gui_data.addOrSubtract = 1;
+gui_data.pp_handles = pp_handles;
+gui_data.selectedPlayer = 1; %TODO: Should be the one chosen from radiogroup
 guidata(handles.gui, gui_data);
 
 end
@@ -164,13 +182,14 @@ function [handles, gridProbability] = fill_card_grid(handles, gridProbability, G
     set(handles.gui,'ButtonDownFcn',@ButtonDownFcn_Callback);
 end
 
-function handles = fill_tournament_info(handles, GOS)
+function handles = fill_table_view_info(handles, GOS)
     panel_startX = (GOS.gridWidth + 2*GOS.margin)/GOS.guiWidth;
     panel_startY = (GOS.guiHeight - GOS.tableViewPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
     field_panel = 'tableViewPanel';
     handles.(field_panel) = uipanel('FontSize',8,...
         'Title', 'Table view', 'Tag', field_panel, ...
         'Position',[panel_startX, panel_startY, GOS.tableViewPanelWidth/GOS.guiWidth, GOS.tableViewPanelHeight/GOS.guiHeight]);
+
 end
 
 function handles = fill_hand_range_selection(handles, GOS)
@@ -192,6 +211,7 @@ function handles = fill_player_selection_radio_buttons(handles, GOS)
     for p = 1:10
         field = sprintf('radiobutton_player%d', p);
         handles.(field) = uicontrol(handles.(field_bg),'Style', 'radiobutton',...
+            'UserData', p, ...
             'Tag', field, 'Position', ...
             [0, GOS.buttonGroupPlayerHeight-(p-1/4)*(GOS.playerPanelHeight)-(p-1)*GOS.playerPanelMargin, GOS.buttonGroupPlayerWidth, GOS.buttonGroupPlayerWidth]...
             );
@@ -213,13 +233,16 @@ function handles = fill_player_panels(handles, GOS)
         %Field with stack sizes
         field = sprintf('stack_player%d', p);
         handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+            'Tag', field, ...
             'Position', [0, GOS.playerPanelHeight-GOS.playerPanelStackHeight-GOS.playerPanelMargin, ...
                         GOS.playerPanelStackWidth, GOS.playerPanelStackHeight], ...
-            'String', '1500');
+            'String', '1500', ...
+            'Callback', {@stack_player_Callback, p});
 
         %Field with chips put in the pot for player
         field = sprintf('chipsPlayed_player%d', p);
         handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+            'Tag', field, ...
             'Position', [GOS.playerPanelStackWidth+GOS.playerPanelMargin, GOS.playerPanelHeight-GOS.playerPanelStackHeight-GOS.playerPanelMargin, ...
                         GOS.playerPanelStackWidth, GOS.playerPanelStackHeight], ...
             'String', '0');
@@ -227,28 +250,32 @@ function handles = fill_player_panels(handles, GOS)
         %Action buttons
         field = sprintf('raiseButton_player%d', p);
         handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
+            'Tag', field, ...
             'Position', [2*GOS.playerPanelStackWidth+2*GOS.playerPanelMargin, GOS.playerPanelHeight-GOS.playerPanelMargin-GOS.playerPanelActionHeight, ...
                         GOS.playerPanelActionWidth, GOS.playerPanelActionHeight], ...
             'BackgroundColor', 'Red', ...
             'String', 'R');
         field = sprintf('callButton_player%d', p);
         handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
+            'Tag', field, ...
             'Position', [2*GOS.playerPanelStackWidth+2*GOS.playerPanelMargin, GOS.playerPanelHeight-GOS.playerPanelMargin-2*GOS.playerPanelActionHeight, ...
                         GOS.playerPanelActionWidth, GOS.playerPanelActionHeight], ...
             'BackgroundColor', 'Green', ...
             'String', 'C');
         field = sprintf('foldButton_player%d', p);
         handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'pushbutton', ...
+            'Tag', field, ...
             'Position', [2*GOS.playerPanelStackWidth+2*GOS.playerPanelMargin+GOS.playerPanelActionWidth, GOS.playerPanelHeight-GOS.playerPanelMargin-1.5*GOS.playerPanelActionHeight, ...
                         GOS.playerPanelActionWidth, GOS.playerPanelActionHeight], ...
             'BackgroundColor', 'yellow', ...
             'String', 'F');
 
         %Field with ICM for player
-        field = sprintf('chipsPlayed_player%d', p);
+        field = sprintf('ICM_player%d', p);
         position = [2*GOS.playerPanelStackWidth+3*GOS.playerPanelMargin+2*GOS.playerPanelActionWidth, GOS.playerPanelHeight-GOS.playerPanelICMHeight-GOS.playerPanelMargin, ...
                     GOS.playerPanelICMWidth, GOS.playerPanelICMHeight];
         handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'text', ...
+            'Tag', field, ...
             'Position', position, ...
             'BackgroundColor', 'white', ...
             'String', '0%');
@@ -256,12 +283,12 @@ function handles = fill_player_panels(handles, GOS)
 end
 
 function handles = fill_hero_hand_information(handles, GOS)
-panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth)/GOS.guiWidth;
-panel_startY = (GOS.guiHeight - GOS.handInformationPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
-field_panel = 'heroHandInformation';
-handles.(field_panel) = uipanel('FontSize',8,...
-    'Title', 'Hero hand information', 'Tag', field_panel, ...
-    'Position',[panel_startX, panel_startY, GOS.handInformationPanelWidth/GOS.guiWidth, GOS.handInformationPanelHeight/GOS.guiHeight]);
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth)/GOS.guiWidth;
+    panel_startY = (GOS.guiHeight - GOS.handInformationPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
+    field_panel = 'heroHandInformation';
+    handles.(field_panel) = uipanel('FontSize',8,...
+        'Title', 'Hero hand information', 'Tag', field_panel, ...
+        'Position',[panel_startX, panel_startY, GOS.handInformationPanelWidth/GOS.guiWidth, GOS.handInformationPanelHeight/GOS.guiHeight]);
 end
 
 function handles = fill_villains_hand_information(handles, GOS)
@@ -280,6 +307,15 @@ function handles = fill_tournament_information(handles, GOS)
     handles.(field_panel) = uipanel('FontSize',8,...
         'Title', 'Tournament information', 'Tag', field_panel, ...
         'Position',[panel_startX, panel_startY, GOS.tournamentInfoPanelWidth/GOS.guiWidth, GOS.tournamentInfoPanelHeight/GOS.guiHeight]);
+
+    %Field with payouts for tournament
+    field = 'tournament_payouts';
+    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+        'Position', [0, 0, ...
+        floor(GOS.tournamentInfoPanelWidth/2), floor(GOS.tournamentInfoPanelHeight/4)], ...
+        'String', '0.5, 0.3, 0.2', ...
+        'Callback', @tournament_payouts_Callback);
+
 end
 
 function handles = fill_street_action_view(handles, GOS)

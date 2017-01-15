@@ -6,6 +6,9 @@ function WindowButtonMotionFcn_Callback(hObject, eventdata)
     GOS = gui_data.GOS;
     handles = gui_data.handles;
     addOrSubtract = gui_data.addOrSubtract;
+    selectedPlayer = gui_data.selectedPlayer;
+    handRangeOld = gui_data.pp_handles(selectedPlayer).getHandRange();
+    handRange = handRangeOld;
 
     %Initialize persistent variable
     if isempty(delay_last_change)
@@ -70,20 +73,16 @@ function WindowButtonMotionFcn_Callback(hObject, eventdata)
                 if jj+ny < 1 || jj+ny > GOS.gridSize, continue; end
                 dp_ind_y = ny + floor(square_size/2) + 1;
                 dp_ind_x = nx + floor(square_size/2) + 1;
-                gui_data.gridProbability(jj+ny, ii+nx) = gui_data.gridProbability(jj+ny, ii+nx) + addOrSubtract*dp_mat(dp_ind_y, dp_ind_x);
-                gui_data.gridProbability(jj+ny, ii+nx) = min(gui_data.gridProbability(jj+ny, ii+nx), 1);
-                gui_data.gridProbability(jj+ny, ii+nx) = max(gui_data.gridProbability(jj+ny, ii+nx), 0);
-                
-                field = sprintf('hand_field_%dx%d', jj+ny, ii+nx);
-                inverted_green = [1 0.4 0.9];
-                set(handles.(field), 'BackgroundColor', [1, 1, 1] - inverted_green*gui_data.gridProbability(jj+ny, ii+nx))
-                text_string = get(handles.(field), 'String');
-                text_string(2,:) = sprintf('(%.2f)', gui_data.gridProbability(jj+ny, ii+nx));
-                set(handles.(field), 'String', text_string);
+                handRange(jj+ny, ii+nx) = handRange(jj+ny, ii+nx) + addOrSubtract*dp_mat(dp_ind_y, dp_ind_x);
+                handRange(jj+ny, ii+nx) = min(handRange(jj+ny, ii+nx), 1);
+                handRange(jj+ny, ii+nx) = max(handRange(jj+ny, ii+nx), 0);
             end
         end
         
         delay_last_change = clock();
+        [r,c] = find(handRangeOld ~= handRange);
+        gui_data.pp_handles(selectedPlayer).setHandRange(handRange);
+        gui_data.pp_handles(selectedPlayer).viewPlayerHandRange(r,c); %TODO: Only update changed values
     end
     
     guidata(gui, gui_data);
