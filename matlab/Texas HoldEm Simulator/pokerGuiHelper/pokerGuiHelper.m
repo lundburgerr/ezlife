@@ -99,6 +99,9 @@ handles = fill_tournament_information(handles, GOS);
 %Street action panel
 handles = fill_street_action_view(handles, GOS);
 
+%% Create PokerTournament object
+pokerTournament = PokerTournament('test');
+
 %% Create PokerPlayer objects
 handles_handrange_grid = zeros(13, 13);
 for nx = 1:13 %TODO: We shoould have all these handles below in a panel which should be the only handle we pass in to the PP object
@@ -110,9 +113,9 @@ end
 for p = 1:10
     field_panel = sprintf('panel_player%d', p);
     handle_player_panel = handles.(field_panel);
-    pp_handles(p) = PokerPlayer(handles_handrange_grid, handle_player_panel);
+    pp_handles(p) = PokerPlayer(handles_handrange_grid, handle_player_panel, pokerTournament);
+    pokerTournament.setPokerPlayer(pp_handles(p), p);
     pp_handles(p).setStack(1000);
-    pp_handles(p).setIcm(0.1);
 end
 
 
@@ -123,7 +126,8 @@ gui_data.handles = handles;
 gui_data.button_down = 0;
 gui_data.addOrSubtract = 1;
 gui_data.pp_handles = pp_handles;
-gui_data.selectedPlayer = 1; %TODO: Should be the one chosen from radiogroup
+gui_data.pokerTournament = pokerTournament;
+gui_data.selectedPlayer = 1; %Should be the one chosen from radiogroup
 guidata(handles.gui, gui_data);
 
 end

@@ -12,10 +12,11 @@ classdef PokerPlayer < handle
     end
     
     methods
-        function obj = PokerPlayer(handles_handrange_grid, handle_playerpanel)
+        function obj = PokerPlayer(handles_handrange_grid, handle_playerpanel, tournament)
             obj.handRange = zeros(13,13);
             obj.stack = 0;
             obj.IcmPlayer = 0.0;
+            obj.tournament = tournament;
             obj.position = 0; %TODO: Create ENUM for positions: BB, SB, BU, CO, HJ, HJ+1, HJ+2, ... 
             
             playerChildrenHandles = allchild(handle_playerpanel);
@@ -45,7 +46,7 @@ classdef PokerPlayer < handle
         function setStack(obj, stack)
             if isnumeric(stack)
                 obj.stack = stack;
-%                 tournament.updateIcm(); %TODO: This sshould work
+                obj.tournament.updateIcm();
             end
             obj.updateStackField();
         end
