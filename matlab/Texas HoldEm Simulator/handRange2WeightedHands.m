@@ -18,12 +18,12 @@ counter = 1;
 for n = playedHands'
     row = ceil(n/numCards);
     col = mod(n-1, numCards)+1;
-    if col > row %Unsuited hands
+    if col < row %offsuited hands
         for kk = 1:numSuits
-            c1 = (row-1)*numSuits + kk;
+            c1 = (col-1)*numSuits + kk;
             for pp = 1:numSuits
                 if kk == pp, continue, end;
-                c2 = (col-1)*numSuits + pp;
+                c2 = (row-1)*numSuits + pp;
                 if ~any(c1 == knownCards) && ~any(c2 == knownCards)
                     hands{counter} = [c1, c2];
                     probability(counter) = handRange(row, col);
@@ -31,10 +31,10 @@ for n = playedHands'
                 end
             end
         end
-    elseif col < row %Suited hands
+    elseif col > row %suited hands
         for kk = 1:numSuits
-            c1 = (col-1)*numSuits + kk;
-            c2 = (row-1)*numSuits + kk;
+            c1 = (row-1)*numSuits + kk;
+            c2 = (col-1)*numSuits + kk;
             if ~any(c1 == knownCards) && ~any(c2 == knownCards)
                 hands{counter} = [c1, c2];
                 probability(counter) = handRange(row, col);

@@ -140,11 +140,11 @@ function [handles, gridProbability] = fill_card_grid(handles, gridProbability, G
             field = sprintf('hand_field_%dx%d', jj, ii);
             position = [(ii-1)*GOS.nodeWidth+GOS.margin, GOS.guiHeight-GOS.margin-jj*GOS.nodeHeight, GOS.nodeWidth, GOS.nodeHeight];
             if jj>ii
-                hand = sprintf('%s%ss\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
+                hand = sprintf('%s%so\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
             elseif jj==ii
                 hand = sprintf('%s%s\n(%.2f)', Cards{ii}, Cards{jj}, gridProbability(jj,ii));
             else
-                hand = sprintf('%s%so\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
+                hand = sprintf('%s%ss\n(%.2f)', Cards{jj}, Cards{ii}, gridProbability(jj,ii));
             end
             handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'text', ...
                     'Position', position, ...
@@ -161,25 +161,37 @@ function [handles, gridProbability] = fill_card_grid(handles, gridProbability, G
     %% Create hand range sliders
     slider_startY = GOS.guiHeight-GOS.gridHeight - 2*GOS.sliderMargin - GOS.margin;
     slider_startX = GOS.margin;
-    %Slider for suited hands
+    
+    %Slider for all hands
     field = 'slider_handRange';
     handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
                     'Position', [slider_startX, slider_startY, GOS.sliderWidth, GOS.sliderHeight], ...
                     'Tag', field, ...
-                    'Callback',  {@slider_handRange_Callback, 'suited'});
-
-    %Slider for offsuited hands
-    field = 'slider_handRange';
+                    'Min', 0, 'Max', 169, 'SliderStep', [1/169 17/169], ...
+                    'Callback',  {@slider_handRange_Callback, 'all'});
+                
+    %Slider for suited hands
+    field = 'slider_handRange_suited';
     handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
                     'Position', [slider_startX, slider_startY-2*GOS.sliderMargin, GOS.sliderWidth, GOS.sliderHeight], ...
                     'Tag', field, ...
-                    'Callback',  {@slider_handRange_Callback, 'offsuited'});
+                    'Min', 0, 'Max', 78, 'SliderStep', [1/78 8/78], ...
+                    'Callback',  {@slider_handRange_Callback, 'suited'});
 
-    %Slider for pocket pairs
-    field = 'slider_handRange';
+    %Slider for offsuited hands
+    field = 'slider_handRange_offsuited';
     handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
                     'Position', [slider_startX, slider_startY-4*GOS.sliderMargin, GOS.sliderWidth, GOS.sliderHeight], ...
                     'Tag', field, ...
+                    'Min', 0, 'Max', 78, 'SliderStep', [1/78 8/78], ...
+                    'Callback',  {@slider_handRange_Callback, 'offsuited'});
+
+    %Slider for pocket pairs
+    field = 'slider_handRange_pocket';
+    handles.(field) = uicontrol('Parent', handles.gui, 'Style', 'slider', ...
+                    'Position', [slider_startX, slider_startY-6*GOS.sliderMargin, GOS.sliderWidth, GOS.sliderHeight], ...
+                    'Tag', field, ...
+                    'Min', 0, 'Max', 13, 'SliderStep', [1/13 1/13], ...
                     'Callback',  {@slider_handRange_Callback, 'pocket'});
                 
     %Set callbacks for button down on grid
