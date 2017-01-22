@@ -24,7 +24,7 @@ end
 
 % Gets the card associated with a card string
 function card = GetCard(cardStr)
-    Cards = {'A','K','Q','J','10','9','8','7','6','5','4','3','2'};
+    Cards = {'A','K','Q','J','T','9','8','7','6','5','4','3','2'};
     Suits = {'S','D','H','C'};
     NumSuits = 4;
     if isempty(cardStr)

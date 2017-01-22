@@ -1,5 +1,5 @@
 function cardsText = mapCardsNum2Text(cardsNum)
-Cards = {'A','K','Q','J','10','9','8','7','6','5','4','3','2'};
+Cards = {'A','K','Q','J','T','9','8','7','6','5','4','3','2'};
 Suits = {'S','D','H','C'};
 
 if isempty(cardsNum)
