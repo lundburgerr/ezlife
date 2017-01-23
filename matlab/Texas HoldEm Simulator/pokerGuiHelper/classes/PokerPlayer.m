@@ -9,6 +9,7 @@ classdef PokerPlayer < handle
         handles;
         position; %Maybe position should be in another class, like PokerTable
         tournament; %The tournament the players is in, can calculate ICM and stuff.
+        streetAction;
     end
     
     methods
@@ -23,6 +24,7 @@ classdef PokerPlayer < handle
             obj.handles.handrange_grid = handles_handrange_grid;
             obj.handles.stack_field = playerChildrenHandles(6);
             obj.handles.icm_field = playerChildrenHandles(1);
+            obj.handles.bet = playerChildrenHandles(5);
         end
         
         function viewPlayerHandRange(obj, varargin)
@@ -55,6 +57,21 @@ classdef PokerPlayer < handle
             if isnumeric(IcmPlayer) && IcmPlayer <= 1 && IcmPlayer >= 0
                 obj.IcmPlayer = IcmPlayer;
                 obj.updateIcmField();
+            end
+        end
+        
+        %Update player actions
+        function updateStreetAction(obj, varargin)
+            p = inputParser;
+            p.addOptional('reset', 0, @is_bool);
+            p.addOptional('add', [], @is_poker_street_action);
+            parse(p,varargin{:});
+            
+            if p.reset == 1
+                obj.playerStreetAction = {};
+            elseif ~isempty(p.add)
+                obj.playerStreetAction{end+1} = {p.add};
+                set(obj.handles.bet, 'String', p.add.bet);
             end
         end
         
