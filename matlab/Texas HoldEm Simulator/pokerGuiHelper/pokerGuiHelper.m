@@ -1,4 +1,4 @@
-function handRangeGenerator
+function pokerGuiHelper
 
 %% Define sizes for different uicontrols in pixel (Gui Object Sizes)
 GOS.gridSize = 13;
@@ -13,6 +13,11 @@ GOS.sliderMargin = 8;
 
 GOS.tableViewPanelWidth = 200;
 GOS.tableViewPanelHeight = 250;
+GOS.tableViewPanelCardsWidth = 110;
+GOS.tableViewPanelCardsHeight = 30;
+GOS.tableViewPanelPotWidth = 80;
+GOS.tableViewPanelPotHeight = 20;
+GOS.tableViewPanelMargin = 5;
 
 GOS.handRangeButtonsPanelWidth = 200;
 GOS.handRangeButtonsPanelHeight = 150;
@@ -26,6 +31,11 @@ GOS.playerPanelICMWidth = 30;
 GOS.playerPanelICMHeight = GOS.playerPanelStackHeight;
 GOS.playerPanelActionHeight = (GOS.playerPanelHeight-2*GOS.playerPanelMargin)/2;
 GOS.playerPanelActionWidth = GOS.playerPanelActionHeight;
+
+GOS.playerPositionPanelWidth = 20;
+GOS.playerPositionPanelHeight = 10*GOS.playerPanelHeight + 9*GOS.playerPanelMargin;
+GOS.playerPositionPanelTextWidth = GOS.playerPositionPanelWidth;
+GOS.playerPositionPanelTextHeight = GOS.playerPositionPanelWidth;
 
 GOS.buttonGroupPlayerWidth = 20;
 GOS.buttonGroupPlayerHeight = 10*GOS.playerPanelHeight + 9*GOS.playerPanelMargin;
@@ -86,6 +96,9 @@ handles = fill_player_selection_radio_buttons(handles, GOS);
        
 %Create panels for each player
 handles = fill_player_panels(handles, GOS);
+
+%Create panel showing current street action for all players
+handles = fill_player_position_panel(handles, GOS);
 
 %Create hand information for hero
 handles = fill_hero_hand_information(handles, GOS);
@@ -158,7 +171,7 @@ function [handles, gridProbability] = fill_card_grid(handles, gridProbability, G
         end
     end
 
-    %% Create hand range sliders
+    %Create hand range sliders
     slider_startY = GOS.guiHeight-GOS.gridHeight - 2*GOS.sliderMargin - GOS.margin;
     slider_startX = GOS.margin;
     
@@ -205,6 +218,25 @@ function handles = fill_table_view_info(handles, GOS)
     handles.(field_panel) = uipanel('FontSize',8,...
         'Title', 'Table view', 'Tag', field_panel, ...
         'Position',[panel_startX, panel_startY, GOS.tableViewPanelWidth/GOS.guiWidth, GOS.tableViewPanelHeight/GOS.guiHeight]);
+
+    %Field with table cards
+    field = 'table_cards';
+    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+        'Tag', field, ...
+        'Position', [0, GOS.tableViewPanelHeight-GOS.tableViewPanelCardsHeight-5*GOS.tableViewPanelMargin, ...
+        GOS.tableViewPanelCardsWidth, GOS.tableViewPanelCardsHeight], ...
+        'String', 'Ad, Kd, Qd, Jd, Td', ...
+        'Callback', '');
+    
+    %Field with pot size
+    field = 'table_pot_size';
+    handles.(field) = uicontrol('Parent', handles.(field_panel), 'Style', 'edit', ...
+        'Tag', field, ...
+        'Position', [0, GOS.tableViewPanelHeight-GOS.tableViewPanelCardsHeight-GOS.tableViewPanelCardsHeight-6*GOS.tableViewPanelMargin, ...
+        GOS.tableViewPanelPotWidth, GOS.tableViewPanelPotHeight], ...
+        'String', '0', ...
+        'Callback', '');
+    
 
 end
 
@@ -298,8 +330,25 @@ function handles = fill_player_panels(handles, GOS)
     end
 end
 
+function handles = fill_player_position_panel(handles, GOS)
+    startY = GOS.margin/GOS.guiHeight;
+    startX = (GOS.gridWidth + GOS.tableViewPanelWidth + GOS.playerPanelWidth + 3*GOS.margin + GOS.buttonGroupPlayerWidth)/GOS.guiWidth;
+    position_panel = [startX, startY, GOS.playerPositionPanelWidth/GOS.guiWidth, GOS.playerPositionPanelHeight/GOS.guiHeight];
+    field_panel = 'player_position_panel';
+    handles.(field_panel) = uipanel('Tag', field_panel, ...
+        'Position',position_panel);
+    for p = 1:10
+        field = sprintf('position_text_player%d', p);
+        handles.(field) = uicontrol(handles.(field_panel),'Style', 'text',...
+            'BackgroundColor', 'white', ...
+            'Tag', field, 'Position', ...
+            [0, GOS.playerPositionPanelHeight-(p-1/4)*(GOS.playerPanelHeight)-(p-1)*GOS.playerPanelMargin, GOS.playerPositionPanelTextWidth, GOS.playerPositionPanelTextHeight]...
+            );
+    end
+end
+
 function handles = fill_hero_hand_information(handles, GOS)
-    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth)/GOS.guiWidth;
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.playerPositionPanelWidth)/GOS.guiWidth;
     panel_startY = (GOS.guiHeight - GOS.handInformationPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
     field_panel = 'heroHandInformation';
     handles.(field_panel) = uipanel('FontSize',8,...
@@ -308,7 +357,7 @@ function handles = fill_hero_hand_information(handles, GOS)
 end
 
 function handles = fill_villains_hand_information(handles, GOS)
-    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth +GOS. playerPanelWidth)/GOS.guiWidth;
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 4*GOS.margin + GOS.buttonGroupPlayerWidth +GOS.playerPanelWidth + GOS.playerPositionPanelWidth)/GOS.guiWidth;
     panel_startY = (GOS.guiHeight - 2*GOS.handInformationPanelHeight - 1*GOS.margin)/GOS.guiHeight;
     field_panel = 'villainsHandInformation';
     handles.(field_panel) = uipanel('FontSize',8,...
@@ -317,7 +366,7 @@ function handles = fill_villains_hand_information(handles, GOS)
 end
 
 function handles = fill_tournament_information(handles, GOS)
-    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 5*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.handInformationPanelWidth)/GOS.guiWidth;
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 5*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.handInformationPanelWidth+GOS.playerPositionPanelWidth)/GOS.guiWidth;
     panel_startY = (GOS.guiHeight - GOS.tournamentInfoPanelHeight - 0.5*GOS.margin)/GOS.guiHeight;
     field_panel = 'tournamentInformationPanel';
     handles.(field_panel) = uipanel('FontSize',8,...
@@ -335,7 +384,7 @@ function handles = fill_tournament_information(handles, GOS)
 end
 
 function handles = fill_street_action_view(handles, GOS)
-    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 5*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.handInformationPanelWidth)/GOS.guiWidth;
+    panel_startX = (GOS.gridWidth + GOS.tableViewPanelWidth + 5*GOS.margin + GOS.buttonGroupPlayerWidth + GOS.playerPanelWidth + GOS.handInformationPanelWidth+GOS.playerPositionPanelWidth)/GOS.guiWidth;
     panel_startY = (GOS.guiHeight - GOS.tournamentInfoPanelHeight - GOS.streetActionPanelHeight - 1*GOS.margin)/GOS.guiHeight;
     field_panel = 'streetActionViewPanel';
     handles.(field_panel) = uipanel('FontSize',8,...
