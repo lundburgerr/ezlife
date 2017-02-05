@@ -32,7 +32,7 @@ GOS.playerPanelICMHeight = GOS.playerPanelStackHeight;
 GOS.playerPanelActionHeight = (GOS.playerPanelHeight-2*GOS.playerPanelMargin)/2;
 GOS.playerPanelActionWidth = GOS.playerPanelActionHeight;
 
-GOS.playerPositionPanelWidth = 20;
+GOS.playerPositionPanelWidth = 30;
 GOS.playerPositionPanelHeight = 10*GOS.playerPanelHeight + 9*GOS.playerPanelMargin;
 GOS.playerPositionPanelTextWidth = GOS.playerPositionPanelWidth;
 GOS.playerPositionPanelTextHeight = GOS.playerPositionPanelWidth;
@@ -113,7 +113,8 @@ handles = fill_tournament_information(handles, GOS);
 handles = fill_street_action_view(handles, GOS);
 
 %% Create PokerTournament object
-pokerTournament = PokerTournament('test');
+pokerTournament = PokerTournament('Tournament1');
+pokerTable = PokerTable('Table1', handles.table_pot_size, handles.table_cards, handles.player_position_panel);
 
 %% Create PokerPlayer objects
 handles_handrange_grid = zeros(13, 13);
@@ -128,8 +129,15 @@ for p = 1:10
     handle_player_panel = handles.(field_panel);
     pp_handles(p) = PokerPlayer(handles_handrange_grid, handle_player_panel, pokerTournament);
     pokerTournament.setPokerPlayer(pp_handles(p), p);
+    
+    pokerTable.setPokerPlayer(pp_handles(p), p);
+    pokerTable.setActiveSeat(p, 1);
+    
     pp_handles(p).setStack(1000);
 end
+
+%% Set default values for table
+pokerTable.setDealer(1);
 
 
 %% Save guidata
@@ -140,6 +148,7 @@ gui_data.button_down = 0;
 gui_data.addOrSubtract = 1;
 gui_data.pp_handles = pp_handles;
 gui_data.pokerTournament = pokerTournament;
+gui_data.pokerTable = pokerTable;
 gui_data.selectedPlayer = 1; %Should be the one chosen from radiogroup
 guidata(handles.gui, gui_data);
 
@@ -226,7 +235,7 @@ function handles = fill_table_view_info(handles, GOS)
         'Position', [0, GOS.tableViewPanelHeight-GOS.tableViewPanelCardsHeight-5*GOS.tableViewPanelMargin, ...
         GOS.tableViewPanelCardsWidth, GOS.tableViewPanelCardsHeight], ...
         'String', 'Ad, Kd, Qd, Jd, Td', ...
-        'Callback', '');
+        'Callback', @table_cards_Callback);
     
     %Field with pot size
     field = 'table_pot_size';
@@ -235,7 +244,7 @@ function handles = fill_table_view_info(handles, GOS)
         'Position', [0, GOS.tableViewPanelHeight-GOS.tableViewPanelCardsHeight-GOS.tableViewPanelCardsHeight-6*GOS.tableViewPanelMargin, ...
         GOS.tableViewPanelPotWidth, GOS.tableViewPanelPotHeight], ...
         'String', '0', ...
-        'Callback', '');
+        'Callback', @table_pot_size_Callback);
     
 
 end
