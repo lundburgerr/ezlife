@@ -34,12 +34,12 @@ classdef PokerTable < handle
             
             obj.activeSeats = zeros(1,10);
             obj.playerPositions = zeros(1,10);
+            obj.pokerPlayers = PokerPlayer.empty(10,0);
         end
         
         %Set pokerplayer to the table
         function setPokerPlayer(obj, pokerPlayer, pind)
             obj.pokerPlayers(pind) = pokerPlayer;
-            obj.playerStreetAction{pind} = [];
         end
         
         function setActiveSeat(obj, pind, val)
@@ -55,12 +55,17 @@ classdef PokerTable < handle
                 error('Not an active seat');
             end
             idxActive = find(obj.activeSeats == 1);
-            pind_rel = length(idxActive <= pind);
             numPlayers = length(idxActive);
-            positions = PokerPosition.generatePositions(pind_rel, numPlayers);
+            positions = PokerPosition.generatePositions(pind, numPlayers);
             for n=1:length(idxActive)
                 obj.playerPositions(idxActive(n)) = positions(n);
             end
+            
+            %Update gui handles
+            for n=1:10
+                set(obj.handles.player_positions(n), 'String', PokerPosition.toString(obj.playerPositions(n)));
+            end
+            
         end
         
         function rotatePositions(obj)
@@ -69,6 +74,11 @@ classdef PokerTable < handle
             positions = circshift(positions, 1);
             for n=1:length(idxActive)
                 obj.playerPositions(idxActive(n)) = positions(n);
+            end
+            
+            %Update gui handles
+            for n=1:10
+                set(obj.handles.player_positions, 'String', PokerPosition.toString(obj.playerPositions(n)));
             end
         end
         
@@ -108,14 +118,13 @@ classdef PokerTable < handle
             p.addOptional('add', 0, @is_non_negative);
             parse(p,varargin{:});
             
-            if p.reset == 1
+            if p.Results.reset == 1
                 obj.potSize = 0;
-            else
-                obj.potSize = obj.potSize + p.add;
             end
+            obj.potSize = obj.potSize + p.Results.add;
             
             %Update handle
-            set(obj.handles.pot_size, 'String', obj.potSize);
+            set(obj.handles.pot_size, 'String', sprintf('%.2f', obj.potSize));
         end
         
         %Update deck. Removing known cards
@@ -123,20 +132,31 @@ classdef PokerTable < handle
             p = inputParser;
             p.addOptional('reset', 0, @is_bool);
             p.addOptional('remove', [], @is_poker_cards);
+            p.addOptional('add', [], @is_poker_cards);
             parse(p,varargin{:});
             
-            if p.reset == 1
+            if p.Results.reset == 1
                 obj.deck = 1:52;
-            else
-                idx = zeros(length(p.remove), 1);
-                for k = 1:length(p.remove)
-                    idx(k) = find(obj.deck == p.remove(k));
+            end
+            if ~isempty(p.Results.remove)
+                idx = zeros(length(p.Results.remove), 1);
+                for k = 1:length(p.Results.remove)
+                    idx(k) = find(obj.deck == p.Results.remove(k));
                 end
                 obj.deck(idx) = [];
             end
-            
-            %Update handle
-            set(obj.handles.pot_size, 'String', obj.potSize);
+            if ~isempty(p.Results.add)
+                for k=1:length(p.Results.add)
+                    if isempty(find(obj.deck==p.Results.add(k), 1))
+                        obj.deck(end+1) = p.Results.add(k);
+                    end
+                end
+            end
+        end
+        
+        %Check if card is in the deck
+        function result = inDeck(obj, card)
+            result = ~isempty(find(obj.deck==card, 1));
         end
         
         %Update table cards
@@ -146,11 +166,18 @@ classdef PokerTable < handle
             p.addOptional('add', [], @is_poker_cards);
             parse(p,varargin{:});
             
-            if p.reset == 1
+            if p.Results.reset == 1
+                obj.updateDeck('add', obj.tableCards)
                 obj.tableCards = [];
-            else
-                obj.tableCards = [obj.tableCards, p.add]; %TODO: Should check that p.add is a row vector
-                obj.updateDeck('remove', p.add); %Remove cards from the deck
+            end
+            if ~isempty(p.Results.add)
+                for n=1:length(p.Results.add)
+                    if length(obj.tableCards) == 5, break; end
+                    if obj.inDeck(p.Results.add(n))
+                        obj.tableCards = [obj.tableCards, p.Results.add(n)];
+                        obj.updateDeck('remove', p.Results.add(n)); %Remove cards from the deck
+                    end
+                end
             end
             
             %Update handle
