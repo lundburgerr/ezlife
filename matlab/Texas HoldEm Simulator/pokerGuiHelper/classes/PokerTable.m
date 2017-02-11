@@ -4,14 +4,27 @@ classdef PokerTable < handle
     
     properties (Access = private)
         tournament;
-        pokerPlayers; %TODO: Maybe this should be in a PokerTable class? RIght now this only contain players for one table, works for SNGs
+        pokerPlayers;
         currentStreet; %0 = PREFLOP, 1 = FLOP, 2 = TURN, 3 = RIVER
         potSize;
         handles;
+        
         tableCards;
         deck;
+        
         playerPositions;
         activeSeats;
+        
+        %Table structure stuff (Should this be in PokerTournament class?)
+        ante;
+        smallBlind;
+        bigBlind;
+        
+        %Determining player to act and if the street is finished
+        playerToAct; %Current players turn, -1 indicating no more players can act this street
+        lastPlayerToRaise;
+        toCall; %Value that player needs to call to continue
+        hasNotFolded;
     end
     
     methods
@@ -35,11 +48,32 @@ classdef PokerTable < handle
             obj.activeSeats = zeros(1,10);
             obj.playerPositions = zeros(1,10);
             obj.pokerPlayers = PokerPlayer.empty(10,0);
+            obj.playerToAct = 1;
+            obj.lastPlayerToRaise = -1;
+            obj.toCall = 0;
+            
+            obj.ante = 0;
+            obj.smallBlind = 0;
+            obj.bigBlind = 0;
+            obj.currentStreet = -1;
+            obj.hasNotFolded = ones(1,10);
         end
         
         %Set pokerplayer to the table
         function setPokerPlayer(obj, pokerPlayer, pind)
             obj.pokerPlayers(pind) = pokerPlayer;
+        end
+        
+        function setTableStructure(obj, varargin)
+            p = inputParser;
+            p.addOptional('ante', obj.ante, @is_non_negative);
+            p.addOptional('smallblind', obj.smallBlind, @is_non_negative);
+            p.addOptional('bigblind', obj.bigBlind, @is_non_negative);
+            parse(p,varargin{:});
+            
+            obj.ante = p.Results.ante;
+            obj.smallBlind = p.Resulst.smallblind;
+            obj.bigBlind = p.Results.bigblind;
         end
         
         function setActiveSeat(obj, pind, val)
@@ -184,13 +218,108 @@ classdef PokerTable < handle
             set(obj.handles.table_cards, 'String', mapCardsNum2Text(obj.tableCards));
         end
         
-        %Reset player actions
+        %Reset all player actions
         function resetPlayerActions(obj)
            for n=1:length(obj.pokerPlayers)
-               obj.pokerPlayers.updateStreetAction('reset', 1);
+               obj.pokerPlayers(n).updateStreetAction('reset', 1);
            end
         end
+        
+        %Add action to player and update table information (pot size)
+        function ok = addPlayerAction(obj, pind, streetAction, varargin) %action = 0 for folding, 1 for calling and 2 for raising
+            p = inputParser;
+            p.addOptional('next', 1, @is_bool); %If next is set we 
+            parse(p,varargin{:});
+            ok = 0;
+            
+            if pind == obj.playerToAct
+                ok = 1;
+                %if raise, update latest player to raise
+                if streetAction.action == 2
+                    obj.lastPlayerToRaise = pind;
+                    obj.toCall = streetAction.bet;
+                end
+                
+                relativeBet = obj.pokerPlayers(pind).updateStreetAction('add', streetAction);
+                obj.updatePotSize('add', relativeBet);
+                betTotal = streetAction.bet;
+                %TODO: Probably should update player bet field in GUI here
+                
+                %If folded, set player has folded
+                if streetAction.action == 0
+                    obj.hasNotFolded(pind) = 0;
+                end
+                
+                %Update player to act
+                if p.Results.next
+                    obj.setPlayerToAct('next', 1);
+                end
+                
+                %TODO: If end of street, start a new street
+                
+                %TODO: If new hand rotate position, post antes and blinds
+                %and stuff
+                
+                %TODO: check that bet size is valid (for example player
+                %might be allin) and adjust it accordingly
+                
+                %TODO:
+                %If next player to act is the last raiser, then end of street
+                
+                %TODO:
+                %If we change street, do some predefined behaviour for that
+                %street
+            else
+                error('Not this players turn');
+            end
+        end
+        
+        function setPlayerToAct(obj, varargin)
+            p = inputParser;
+            p.addOptional('reset', 0, @is_bool);
+            p.addOptional('set', [], @is_positive_integer); %TODO: Should be between 1 and 10
+            p.addOptional('next', 0, @is_bool);
+            parse(p,varargin{:});
+            
+            if p.Results.reset == 1
+                [~, obj.playerToAct] = max(obj.playerPositions.*obj.hasNotFolded);
+            elseif ~isempty(p.Results.set)
+                obj.playerToAct = p.Results.set;
+            elseif p.Results.next
+                obj.playerToAct = obj.getNextPlayerToAct();
+            end
+            
+            for n=1:10
+                if n == obj.playerToAct
+                    obj.pokerPlayers(n).enablePlayerActions('on')
+                else
+                    obj.pokerPlayers(n).enablePlayerActions('off')
+                end
+            end
+%             set(findall(PanelHandle, '-property', 'enable'), 'enable', 'off')
+        end
+        
+        %Getters and setters
+        function currentStreet = getCurrentStreet(obj)
+            currentStreet = obj.currentStreet;
+        end
+        function setCurrentStreet(obj, currentStreet)
+            obj.currentStreet = currentStreet;
+        end
+        function toCall = getToCall(obj)
+            toCall = obj.toCall;
+        end
 
+    end
+    
+    methods (Access = private)
+        function pind = getNextPlayerToAct(obj)
+            pind = mod(obj.playerToAct, 10) + 1;
+            while ~obj.isActiveSeat(pind)
+                pind = mod(obj.playerToAct, 10) + 1;
+            end
+%             set(findall(PanelHandle, '-property', 'enable'), 'enable', 'off')
+        end
     end
     
 end

@@ -7,7 +7,6 @@ classdef PokerPlayer < handle
         stack;
         IcmPlayer;
         handles;
-        position; %Maybe position should be in another class, like PokerTable
         tournament; %The tournament the players is in, can calculate ICM and stuff.
         streetAction;
     end
@@ -18,13 +17,18 @@ classdef PokerPlayer < handle
             obj.stack = 0;
             obj.IcmPlayer = 0.0;
             obj.tournament = tournament;
-            obj.position = 0; %TODO: Create ENUM for positions: BB, SB, BU, CO, HJ, HJ+1, HJ+2, ... 
             
             playerChildrenHandles = allchild(handle_playerpanel);
             obj.handles.handrange_grid = handles_handrange_grid;
             obj.handles.stack_field = playerChildrenHandles(6);
             obj.handles.icm_field = playerChildrenHandles(1);
             obj.handles.bet = playerChildrenHandles(5);
+            obj.handles.raiseButton = playerChildrenHandles(4);
+            obj.handles.callButton = playerChildrenHandles(3);
+            obj.handles.foldButton = playerChildrenHandles(2);
+            obj.handles.panel = handle_playerpanel;
+            
+            obj.streetAction = {};
         end
         
         function viewPlayerHandRange(obj, varargin)
@@ -53,6 +57,17 @@ classdef PokerPlayer < handle
             obj.updateStackField();
         end
         
+        function updateStack(obj, varargin)
+            p = inputParser;
+            p.addOptional('add', 0, @is_non_negative);
+            p.addOptional('remove', 0, @is_non_negative);
+            parse(p,varargin{:});
+            
+            obj.stack = obj.stack + p.Results.add - p.Results.remove;
+            obj.tournament.updateIcm();
+            obj.updateStackField();
+        end
+        
         function setIcm(obj, IcmPlayer)
             if isnumeric(IcmPlayer) && IcmPlayer <= 1 && IcmPlayer >= 0
                 obj.IcmPlayer = IcmPlayer;
@@ -61,17 +76,52 @@ classdef PokerPlayer < handle
         end
         
         %Update player actions
-        function updateStreetAction(obj, varargin)
+        function diffBet = updateStreetAction(obj, varargin)
             p = inputParser;
             p.addOptional('reset', 0, @is_bool);
             p.addOptional('add', [], @is_poker_street_action);
             parse(p,varargin{:});
             
-            if p.reset == 1
-                obj.playerStreetAction = {};
-            elseif ~isempty(p.add)
-                obj.playerStreetAction{end+1} = {p.add};
-                set(obj.handles.bet, 'String', p.add.bet);
+            if p.Results.reset == 1
+                obj.streetAction = {};
+            elseif ~isempty(p.Results.add)
+                oldBet = 0;
+                if ~isempty(obj.streetAction)
+                    oldAction = obj.streetAction{end};
+                    if p.Results.add.street == oldAction.street
+                        oldBet = oldAction.bet;
+                    end
+                end
+                obj.streetAction{end+1} = p.Results.add;
+                set(obj.handles.bet, 'String', p.Results.add.bet);
+                %TODO: change color of player field indicating what action
+                %they took
+                
+                %Return the difference of bet and what the player had
+                %allready put in on this street (not counting ante of course)
+                diffBet = p.Results.add.bet - oldBet;
+                
+                %Remove amount of chips from player stack
+                obj.updateStack('remove', diffBet);
+            end
+            
+            
+        end
+        
+        function enablePlayerActions(obj, enable)
+            switch enable
+                case 'on'
+                    set(obj.handles.bet, 'Enable', 'on');
+                    set(obj.handles.raiseButton, 'Enable', 'on');
+                    set(obj.handles.callButton, 'Enable', 'on');
+                    set(obj.handles.foldButton, 'Enable', 'on');
+                case 'off'
+                    set(obj.handles.bet, 'Enable', 'off');
+                    set(obj.handles.raiseButton, 'Enable', 'off');
+                    set(obj.handles.callButton, 'Enable', 'off');
+                    set(obj.handles.foldButton, 'Enable', 'off');
+                otherwise
+                    error('Not a valid argument')
             end
         end
         
